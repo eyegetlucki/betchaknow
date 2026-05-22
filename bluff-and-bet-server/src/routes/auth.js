@@ -1,6 +1,6 @@
 // ─── src/routes/auth.js ───────────────────────────────────────────────────────
 const router = require("express").Router();
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { v4: uuid } = require("uuid");
 const rateLimit = require("express-rate-limit");
 const { supabaseAdmin } = require("../db/supabase");
