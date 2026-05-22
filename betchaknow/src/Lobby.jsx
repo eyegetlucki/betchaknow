@@ -126,7 +126,7 @@ function PlayerChip({ player }) {
   );
 }
 
-export default function LobbyFlow({ onStartGame, onLogin }) {
+export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
   const [screen, setScreen] = useState("home"); // home | create | join | lobby
   const [playerName, setPlayerName] = useState("");
   const [roomCode, setRoomCode] = useState("");
@@ -395,13 +395,17 @@ export default function LobbyFlow({ onStartGame, onLogin }) {
           ))}
         </div>
 
-        <hr style={{ border: "none", borderTop: `1px solid ${COLORS.cardBorder}`, margin: "20px 0 16px" }} />
-        <button
-          style={{ ...styles.btn(COLORS.accent5, true), display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-          onClick={onLogin}
-        >
-          👤 Login / Create Account
-        </button>
+        {!loggedIn && (
+          <>
+            <hr style={{ border: "none", borderTop: `1px solid ${COLORS.cardBorder}`, margin: "20px 0 16px" }} />
+            <button
+              style={{ ...styles.btn(COLORS.accent5, true), display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+              onClick={onLogin}
+            >
+              👤 Login / Create Account
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

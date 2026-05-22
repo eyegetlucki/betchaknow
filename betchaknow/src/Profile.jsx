@@ -243,6 +243,31 @@ export default function ProfilePage() {
   const [recentGames, setRecentGames] = useState(RECENT_GAMES);
   const fileInputRef = useRef(null);
 
+  const [editingUsername,  setEditingUsername]  = useState(false);
+  const [newUsername,      setNewUsername]      = useState("");
+  const [usernameError,    setUsernameError]    = useState("");
+  const [usernameLoading,  setUsernameLoading]  = useState(false);
+
+  const handleSaveUsername = async () => {
+    const trimmed = newUsername.trim();
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(trimmed)) {
+      setUsernameError("3–20 chars, letters/numbers/underscores only");
+      return;
+    }
+    setUsernameLoading(true);
+    try {
+      await api.updateMe({ username: trimmed });
+      localStorage.setItem("bk_username", trimmed);
+      setPlayer(prev => ({ ...prev, username: trimmed }));
+      setEditingUsername(false);
+      setUsernameError("");
+    } catch (err) {
+      setUsernameError(err.message || "Username already taken, try another");
+    } finally {
+      setUsernameLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isLoggedIn()) return;
     api.me().then(d => {
@@ -366,7 +391,58 @@ export default function ProfilePage() {
 
             <div style={{ flex:1, minWidth:200 }}>
               <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:6 }}>
-                <h1 style={{ fontFamily:"'Boogaloo',cursive", fontSize:32, lineHeight:1 }}>{player.username}</h1>
+                {editingUsername ? (
+                  <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                    <input
+                      value={newUsername}
+                      onChange={e => { setNewUsername(e.target.value); setUsernameError(""); }}
+                      maxLength={20}
+                      onKeyDown={e => { if (e.key === "Enter") handleSaveUsername(); if (e.key === "Escape") setEditingUsername(false); }}
+                      style={{
+                        background:"#0d0b1a", border:`1.5px solid ${usernameError ? C.a1 : C.a4}`,
+                        borderRadius:10, padding:"6px 12px", color:C.text,
+                        fontFamily:"'Boogaloo',cursive", fontSize:24, outline:"none",
+                        width:180,
+                      }}
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleSaveUsername}
+                      disabled={usernameLoading}
+                      style={{
+                        background:C.a4, border:"none", borderRadius:8, padding:"6px 14px",
+                        color:"#fff", fontFamily:"'DM Sans',sans-serif", fontWeight:700,
+                        fontSize:13, cursor:"pointer",
+                      }}
+                    >{usernameLoading ? "..." : "Save"}</button>
+                    <button
+                      onClick={() => { setEditingUsername(false); setUsernameError(""); }}
+                      style={{
+                        background:"transparent", border:`1px solid ${C.border2}`, borderRadius:8,
+                        padding:"6px 12px", color:C.muted,
+                        fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:13, cursor:"pointer",
+                      }}
+                    >Cancel</button>
+                    {usernameError && <span style={{ fontSize:12, color:C.a1, fontWeight:600 }}>{usernameError}</span>}
+                  </div>
+                ) : (
+                  <>
+                    <h1 style={{ fontFamily:"'Boogaloo',cursive", fontSize:32, lineHeight:1 }}>{player.username}</h1>
+                    {isLoggedIn() && (
+                      <button
+                        onClick={() => { setNewUsername(player.username); setEditingUsername(true); setUsernameError(""); }}
+                        title="Change username"
+                        style={{
+                          background:"none", border:"none", cursor:"pointer",
+                          fontSize:16, color:C.muted, padding:4, lineHeight:1,
+                          transition:"color 0.15s",
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.color = C.text}
+                        onMouseLeave={e => e.currentTarget.style.color = C.muted}
+                      >✏️</button>
+                    )}
+                  </>
+                )}
                 <span style={{ fontSize:18 }}>{player.country}</span>
                 {player.vip && <VIPBadge />}
               </div>

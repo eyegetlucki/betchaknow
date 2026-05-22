@@ -79,14 +79,15 @@ export const api = {
 };
 
 // Auth helpers
-export function saveSession({ token, refreshToken, username }) {
+export function saveSession({ token, refreshToken, username, avatarUrl }) {
   if (token)        localStorage.setItem("bk_token", token);
   if (refreshToken) localStorage.setItem("bk_refresh", refreshToken);
   if (username)     localStorage.setItem("bk_username", username);
+  if (avatarUrl)    localStorage.setItem("bk_avatar", avatarUrl);
 }
 
 export function clearSession() {
-  ["bk_token", "bk_refresh", "bk_username"].forEach(k => localStorage.removeItem(k));
+  ["bk_token", "bk_refresh", "bk_username", "bk_avatar"].forEach(k => localStorage.removeItem(k));
 }
 
 export function getUsername() {

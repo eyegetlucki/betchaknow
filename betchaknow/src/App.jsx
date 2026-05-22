@@ -286,6 +286,7 @@ export default function App() {
   const [section,       setSection]       = useState("lobby");
   const [gateFor,       setGateFor]       = useState(null);
   const [loggedIn,      setLoggedIn]      = useState(isLoggedIn());
+  const [avatarUrl,     setAvatarUrl]     = useState(() => localStorage.getItem("bk_avatar") || "");
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
 
   // Handle OAuth redirect callback (Google / Discord)
@@ -295,8 +296,10 @@ export default function App() {
       if (event === "SIGNED_IN" && session && !isLoggedIn()) {
         try {
           const provider = session.user.app_metadata?.provider || "google";
+          const oauthAvatar = session.user.user_metadata?.avatar_url || "";
           const result = await api.oauth({ provider, access_token: session.access_token });
-          saveSession({ token: result.token, refreshToken: result.refreshToken, username: result.profile?.username });
+          saveSession({ token: result.token, refreshToken: result.refreshToken, username: result.profile?.username, avatarUrl: oauthAvatar });
+          if (oauthAvatar) setAvatarUrl(oauthAvatar);
           setLoggedIn(true);
           setGateFor(null);
           setScreen("main");
@@ -372,7 +375,7 @@ export default function App() {
         </button>
       )}
 
-      {section === "lobby"       && <LobbyFlow onStartGame={() => setScreen("game")} onLogin={() => setScreen("auth")} />}
+      {section === "lobby"       && <LobbyFlow onStartGame={() => setScreen("game")} onLogin={() => setScreen("auth")} loggedIn={loggedIn} />}
       {section === "leaderboard" && <LeaderboardPage />}
       {section === "challenges"  && <ChallengesPage />}
       {section === "shop"        && <ShopPage />}
@@ -386,7 +389,7 @@ export default function App() {
       )}
 
       {/* auth gate overlay */}
-      {gateFor && !showUsernameSetup && (
+      {gateFor && !loggedIn && !showUsernameSetup && (
         <AuthGate
           section={gateFor}
           onLogin={() => { setGateFor(null); setScreen("auth"); }}
@@ -402,16 +405,44 @@ export default function App() {
         zIndex:100,
         paddingTop:"env(safe-area-inset-top, 0px)",
       }}>
-        {NAV_ITEMS.map(tab => (
-          <button
-            key={tab.id}
-            className={`bk-nav-btn ${section === tab.id ? "active" : ""}`}
-            onClick={() => handleNavClick(tab.id)}
-          >
-            <span className="bk-icon">{tab.icon}</span>
-            <span className="bk-label">{tab.label}</span>
-          </button>
-        ))}
+        {NAV_ITEMS.map(tab => {
+          let icon;
+          if (tab.id === "profile" && loggedIn) {
+            if (avatarUrl) {
+              icon = (
+                <img
+                  src={avatarUrl}
+                  alt="avatar"
+                  style={{ width:22, height:22, borderRadius:"50%", objectFit:"cover", display:"block" }}
+                />
+              );
+            } else {
+              const initial = (localStorage.getItem("bk_username") || "?")[0].toUpperCase();
+              icon = (
+                <span style={{
+                  width:22, height:22, borderRadius:"50%",
+                  background:"linear-gradient(135deg,#4d96ff,#6e56cf)",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:11, fontWeight:800, color:"#fff",
+                }}>
+                  {initial}
+                </span>
+              );
+            }
+          } else {
+            icon = tab.icon;
+          }
+          return (
+            <button
+              key={tab.id}
+              className={`bk-nav-btn ${section === tab.id ? "active" : ""}`}
+              onClick={() => handleNavClick(tab.id)}
+            >
+              <span className="bk-icon">{icon}</span>
+              <span className="bk-label">{tab.label}</span>
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
