@@ -288,6 +288,7 @@ export default function App() {
   const [loggedIn,      setLoggedIn]      = useState(isLoggedIn());
   const [avatarUrl,     setAvatarUrl]     = useState(() => localStorage.getItem("bk_avatar") || "");
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
+  const [oauthError,    setOauthError]    = useState("");
 
   // Handle OAuth redirect callback (Google / Discord)
   useEffect(() => {
@@ -307,6 +308,7 @@ export default function App() {
         if (result.isNewUser) setShowUsernameSetup(true);
       } catch (e) {
         console.error("OAuth exchange failed:", e.message);
+        setOauthError(e.message || "OAuth login failed");
       }
     };
 
@@ -394,6 +396,20 @@ export default function App() {
       {section === "friends"     && <FriendsFlow />}
       {section === "battlepass"  && <BattlePassPage />}
       {section === "profile"     && <ProfilePage />}
+
+      {/* OAuth error banner */}
+      {oauthError && (
+        <div style={{
+          position:"fixed", bottom:70, left:0, right:0, zIndex:200,
+          background:"#ff6b6b22", border:"1px solid #ff6b6b88",
+          padding:"10px 16px", textAlign:"center",
+          fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#ff6b6b", fontWeight:600,
+          display:"flex", alignItems:"center", justifyContent:"center", gap:10,
+        }}>
+          ⚠ Login error: {oauthError}
+          <button onClick={() => setOauthError("")} style={{ background:"none", border:"none", color:"#ff6b6b", cursor:"pointer", fontSize:16, padding:0 }}>×</button>
+        </div>
+      )}
 
       {/* username setup for new OAuth users */}
       {showUsernameSetup && (

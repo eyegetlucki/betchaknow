@@ -12,7 +12,11 @@ const required = (key) => {
 module.exports = {
   port:        parseInt(process.env.PORT || "3001"),
   env:         process.env.NODE_ENV || "development",
-  corsOrigin:  process.env.CORS_ORIGIN || "http://localhost:3000",
+  corsOrigin:  (() => {
+    const raw = process.env.CORS_ORIGIN || "http://localhost:3000,http://localhost:5173";
+    const origins = raw.split(",").map(s => s.trim()).filter(Boolean);
+    return origins.length === 1 ? origins[0] : origins;
+  })(),
 
   supabase: {
     url:            required("SUPABASE_URL"),
