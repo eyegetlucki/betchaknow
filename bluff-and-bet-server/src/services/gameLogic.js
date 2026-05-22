@@ -90,7 +90,7 @@ function calcPayout(player, correctIdx, allPlayers, settings) {
 
     case "allin": {
       const stake = player.allInAmount || player.points;
-      return correct ? stake : -stake;
+      return correct ? stake : 0;  // free use — no penalty on wrong answer
     }
 
     case "self": {

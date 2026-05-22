@@ -157,11 +157,22 @@ function resolveRound(room) {
   return updated;
 }
 
+// ─── ADD BOT ──────────────────────────────────────────────────────────────────
+function addBot(room, difficulty = "medium") {
+  const botNum = Array.from(room.players.values()).filter(p => p.isBot).length + 1;
+  const botId  = `bot_${botNum}`;
+  const color  = PLAYER_COLORS[room.players.size % PLAYER_COLORS.length];
+  const player = createPlayer({ id: botId, username: `Bot ${botNum}`, color });
+  room.players.set(botId, { ...player, socketId: botId, isHost: false, isBot: true, botDifficulty: difficulty });
+  return botId;
+}
+
 // ─── PUBLIC STATE (no cheating) ───────────────────────────────────────────────
 function getPublicState(room, forReveal = false) {
   const players = Array.from(room.players.values()).map(p => ({
     id: p.id, username: p.username, color: p.color,
     points: p.points, streak: p.streak, isHost: p.isHost,
+    isBot: p.isBot || false, botDifficulty: p.botDifficulty || null,
     allInUsed: p.allInUsed, isVIP: p.isVIP,
     hasBet:     !forReveal ? !!p.bet    : undefined,
     hasAnswered: !forReveal ? p.ready   : undefined,
@@ -215,7 +226,7 @@ setInterval(() => {
 }, 30 * 60 * 1000);
 
 module.exports = {
-  createRoom, joinRoom, leaveRoom,
+  createRoom, joinRoom, leaveRoom, addBot,
   getRoomBySocket, getPlayerBySocket,
   placeBet, submitAnswer, resolveRound,
   getPublicState, getEndStats,

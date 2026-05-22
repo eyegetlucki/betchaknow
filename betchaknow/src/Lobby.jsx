@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { connectSocket, getSocket } from "./socket";
+import { connectSocket, getSocket, disconnectSocket } from "./socket";
 
 const COLORS = {
   bg: "#0f0e17",
@@ -34,9 +34,8 @@ const TOGGLES = [
   { id: "noBetBonus", label: "💸 No-Bet Bonus", desc: "+50 flat points for correct with no bet" },
 ];
 
-const MOCK_PLAYERS = [
-  { id: 1, name: "You", color: COLORS.accent4, isHost: true },
-];
+const normalizePlayers = (sp) =>
+  sp.map(p => ({ id: p.id, name: p.username, color: p.color, isHost: p.isHost, isBot: p.isBot || false, botDifficulty: p.botDifficulty || null }));
 
 function FloatingParticle({ style }) {
   return (
@@ -93,7 +92,7 @@ function Toggle({ enabled, onChange }) {
   );
 }
 
-function PlayerChip({ player }) {
+function PlayerChip({ player, onKick }) {
   return (
     <div style={{
       display: "flex",
@@ -117,11 +116,30 @@ function PlayerChip({ player }) {
         fontWeight: 900,
         color: "#fff",
         fontFamily: "'Nunito', sans-serif",
-      }}>{player.name[0]}</div>
+      }}>{player.isBot ? "🤖" : player.name[0]}</div>
       <span style={{ color: COLORS.text, fontFamily: "'Nunito', sans-serif", fontWeight: 700, fontSize: 14 }}>
         {player.name}
       </span>
       {player.isHost && <Badge color={COLORS.accent2}>HOST</Badge>}
+      {player.isBot && (
+        <Badge color={
+          player.botDifficulty === "easy" ? COLORS.accent3 :
+          player.botDifficulty === "hard" ? COLORS.accent1 : COLORS.accent2
+        }>
+          {player.botDifficulty ? player.botDifficulty.toUpperCase() : "BOT"}
+        </Badge>
+      )}
+      {player.isBot && onKick && (
+        <button
+          onClick={() => onKick(player.id)}
+          style={{
+            background: "none", border: "none", padding: "0 2px",
+            color: COLORS.accent1, fontSize: 14, cursor: "pointer",
+            lineHeight: 1, fontFamily: "'Nunito', sans-serif",
+          }}
+          title="Kick bot"
+        >✕</button>
+      )}
     </div>
   );
 }
@@ -135,7 +153,8 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
   const [timer, setTimer] = useState(30);
   const [categories, setCategories] = useState(Object.fromEntries(CATEGORIES.map(c => [c.id, true])));
   const [toggles, setToggles] = useState(Object.fromEntries(TOGGLES.map(t => [t.id, true])));
-  const [players, setPlayers] = useState(MOCK_PLAYERS);
+  const [players, setPlayers] = useState([]);
+  const [isHost, setIsHost] = useState(false);
   const [customQ, setCustomQ] = useState("");
   const [customQList, setCustomQList] = useState([]);
   const [tab, setTab] = useState("settings");
@@ -143,24 +162,42 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
   const storedUsername = localStorage.getItem("bk_username") || "";
   const [nameInput, setNameInput] = useState(loggedIn && storedUsername ? storedUsername : "");
   const [pulse, setPulse] = useState(false);
+  const [botDifficulty, setBotDifficulty] = useState("medium");
 
   useEffect(() => {
     const interval = setInterval(() => setPulse(p => !p), 2000);
     return () => clearInterval(interval);
   }, []);
 
-  // Simulate players joining
+  // Sync settings changes to server while host is in lobby
+  useEffect(() => {
+    if (screen !== "lobby" || !isHost) return;
+    const socket = getSocket();
+    if (!socket) return;
+    const enabledCats = Object.entries(categories).filter(([, v]) => v).map(([k]) => k);
+    socket.emit("updateSettings", {
+      settings: { rounds, timerSecs: timer, categories: enabledCats, ...toggles },
+    });
+  }, [screen, isHost, rounds, timer, categories, toggles]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync real player list from server while in lobby
   useEffect(() => {
     if (screen !== "lobby") return;
-    const names = ["Alex", "Jordan", "Sam", "Riley", "Morgan"];
-    const colors = [COLORS.accent1, COLORS.accent2, COLORS.accent3, COLORS.accent5, COLORS.accent4];
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i >= 3) { clearInterval(interval); return; }
-      setPlayers(p => [...p, { id: Date.now(), name: names[i], color: colors[i + 1], isHost: false }]);
-      i++;
-    }, 1800);
-    return () => clearInterval(interval);
+    const socket = getSocket();
+    if (!socket) return;
+
+    const onRoomState = ({ players: sp }) => setPlayers(normalizePlayers(sp));
+    const onPlayerJoined = ({ state }) => setPlayers(normalizePlayers(state.players));
+    const onPlayerLeft   = ({ state }) => setPlayers(normalizePlayers(state.players));
+
+    socket.on("roomState", onRoomState);
+    socket.on("playerJoined", onPlayerJoined);
+    socket.on("playerLeft", onPlayerLeft);
+    return () => {
+      socket.off("roomState", onRoomState);
+      socket.off("playerJoined", onPlayerJoined);
+      socket.off("playerLeft", onPlayerLeft);
+    };
   }, [screen]);
 
   const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -172,8 +209,10 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
     setPlayerName(effectiveName);
     if (!loggedIn) localStorage.setItem("bk_username", effectiveName);
     const socket = connectSocket();
-    socket.once("roomCreated", ({ code }) => {
+    socket.once("roomCreated", ({ code, state }) => {
       setRoomCode(code);
+      if (state?.players) setPlayers(normalizePlayers(state.players));
+      setIsHost(true);
       setScreen("lobby");
     });
     socket.once("error", (msg) => alert("Error: " + msg));
@@ -186,8 +225,10 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
     if (!loggedIn) localStorage.setItem("bk_username", effectiveName);
     const code = joinCode.toUpperCase();
     const socket = connectSocket();
-    socket.once("roomJoined", () => {
+    socket.once("roomJoined", ({ state }) => {
       setRoomCode(code);
+      if (state?.players) setPlayers(normalizePlayers(state.players));
+      setIsHost(false);
       setScreen("lobby");
     });
     socket.once("error", (msg) => alert("Error: " + msg));
@@ -199,14 +240,24 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
     setPlayerName(effectiveName);
     if (!loggedIn) localStorage.setItem("bk_username", effectiveName);
     const socket = connectSocket();
-    const handleRoom = ({ code }) => {
-      setRoomCode(code);
+    const handleRoom = ({ code: c, state }, asHost) => {
+      setRoomCode(c);
+      if (state?.players) setPlayers(normalizePlayers(state.players));
+      setIsHost(asHost);
       setScreen("lobby");
     };
-    socket.once("roomCreated", handleRoom);
-    socket.once("roomJoined",  handleRoom);
+    socket.once("roomCreated", (d) => handleRoom(d, true));
+    socket.once("roomJoined",  (d) => handleRoom(d, false));
     socket.once("error", (msg) => alert("Error: " + msg));
     socket.emit("quickMatch");
+  };
+
+  const handleBack = () => {
+    disconnectSocket();
+    setPlayers([]);
+    setIsHost(false);
+    setRoomCode("");
+    setScreen("home");
   };
 
   const copyCode = () => {
@@ -508,11 +559,14 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
             </div>
           </div>
           <div>
-            <label style={styles.label}>Timer (seconds)</label>
+            <label style={styles.label}>Answer Timer</label>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <button onClick={() => setTimer(t => Math.max(10, t - 5))} style={{ ...styles.btn(COLORS.cardBorder, true), width: 36, padding: "6px", fontSize: 18 }}>−</button>
               <span style={{ color: COLORS.text, fontWeight: 900, fontSize: 22, minWidth: 32, textAlign: "center" }}>{timer}s</span>
               <button onClick={() => setTimer(t => Math.min(60, t + 5))} style={{ ...styles.btn(COLORS.cardBorder, true), width: 36, padding: "6px", fontSize: 18 }}>+</button>
+            </div>
+            <div style={{ color: COLORS.muted, fontSize: 11, marginTop: 5 }}>
+              Per question to answer
             </div>
           </div>
         </div>
@@ -608,6 +662,15 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
       <div style={{ ...styles.card, maxWidth: 580 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <div>
+            <button
+              onClick={handleBack}
+              style={{
+                background: "none", border: "none", padding: "0 0 8px 0",
+                color: COLORS.muted, fontSize: 13, fontWeight: 700,
+                fontFamily: "'Nunito', sans-serif", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 4,
+              }}
+            >← Back</button>
             <h2 style={{ margin: 0, fontFamily: "'Boogaloo', cursive", fontSize: 28, color: COLORS.text }}>
               🎯 Betcha Know!
             </h2>
@@ -635,30 +698,97 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
           </div>
         </div>
 
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <span style={{ color: COLORS.muted, fontSize: 12, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}>
-              Players ({players.length}/10)
-            </span>
-            <span style={{ color: players.length >= 2 ? COLORS.accent3 : COLORS.accent1, fontSize: 12, fontWeight: 800 }}>
-              {players.length >= 2 ? "✓ Ready to start" : "Need at least 2 players"}
-            </span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {players.map(p => <PlayerChip key={p.id} player={p} />)}
-            {players.length < 10 && (
-              <div style={{
-                display: "flex", alignItems: "center", gap: 8,
-                background: "#ffffff08", border: `1px dashed ${COLORS.cardBorder}`,
-                borderRadius: 24, padding: "6px 14px",
-                animation: "pulse 2s ease-in-out infinite",
-              }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>?</div>
-                <span style={{ color: COLORS.muted, fontWeight: 700, fontSize: 14 }}>Waiting...</span>
+        {(() => {
+          const hasBots  = players.some(p => p.isBot);
+          const canStart = players.length >= 2 || (isHost && hasBots);
+          return (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ color: COLORS.muted, fontSize: 12, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}>
+                  Players ({players.length}/10)
+                </span>
+                <span style={{ color: canStart ? COLORS.accent3 : COLORS.accent1, fontSize: 12, fontWeight: 800 }}>
+                  {canStart ? "✓ Ready to start" : "Need 2 players or add a bot"}
+                </span>
               </div>
-            )}
-          </div>
-        </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {players.map(p => (
+                  <PlayerChip
+                    key={p.id}
+                    player={p}
+                    onKick={isHost ? (botId) => getSocket().emit("removeBot", { botId }) : null}
+                  />
+                ))}
+                {players.length < 10 && (
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    background: "#ffffff08", border: `1px dashed ${COLORS.cardBorder}`,
+                    borderRadius: 24, padding: "6px 14px",
+                    animation: "pulse 2s ease-in-out infinite",
+                  }}>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>?</div>
+                    <span style={{ color: COLORS.muted, fontWeight: 700, fontSize: 14 }}>Waiting...</span>
+                  </div>
+                )}
+              </div>
+              {isHost && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{
+                    color: hasBots ? COLORS.muted : COLORS.muted + "66",
+                    fontSize: 11, fontWeight: 800, letterSpacing: 1,
+                    textTransform: "uppercase", marginBottom: 6,
+                    transition: "color 0.2s",
+                  }}>
+                    Bot Difficulty
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{
+                      display: "flex", borderRadius: 20, overflow: "hidden",
+                      border: `1.5px solid ${COLORS.cardBorder}`,
+                      opacity: hasBots ? 1 : 0.35,
+                      pointerEvents: hasBots ? "auto" : "none",
+                      transition: "opacity 0.2s",
+                    }}>
+                      {[
+                        { id: "easy",   label: "Easy", color: COLORS.accent3 },
+                        { id: "medium", label: "Med",  color: COLORS.accent2 },
+                        { id: "hard",   label: "Hard", color: COLORS.accent1 },
+                      ].map((d, idx, arr) => (
+                        <button
+                          key={d.id}
+                          onClick={() => setBotDifficulty(d.id)}
+                          style={{
+                            padding: "6px 11px", border: "none",
+                            borderRight: idx < arr.length - 1 ? `1px solid ${COLORS.cardBorder}` : "none",
+                            background: botDifficulty === d.id ? d.color + "33" : "transparent",
+                            color: botDifficulty === d.id ? d.color : COLORS.muted,
+                            fontSize: 12, fontWeight: 800,
+                            fontFamily: "'Nunito', sans-serif", cursor: "pointer",
+                            transition: "background 0.15s, color 0.15s",
+                          }}
+                        >{d.label}</button>
+                      ))}
+                    </div>
+                    {players.filter(p => p.isBot).length < 3 && (
+                      <button
+                        style={{
+                          padding: "7px 16px", borderRadius: 20,
+                          border: `1.5px solid ${COLORS.muted}44`,
+                          background: "transparent", color: COLORS.muted,
+                          fontSize: 13, fontWeight: 700, fontFamily: "'Nunito', sans-serif",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => getSocket().emit("addBot", { difficulty: botDifficulty })}
+                      >
+                        🤖 Add Bot
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         <hr style={styles.divider} />
 
@@ -696,11 +826,14 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
               </div>
             </div>
             <div>
-              <label style={styles.label}>Timer</label>
+              <label style={styles.label}>Answer Timer</label>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <button onClick={() => setTimer(t => Math.max(10, t - 5))} style={{ ...styles.btn(COLORS.cardBorder, true), width: 36, padding: "6px", fontSize: 18 }}>−</button>
                 <span style={{ color: COLORS.text, fontWeight: 900, fontSize: 24, minWidth: 36, textAlign: "center" }}>{timer}s</span>
                 <button onClick={() => setTimer(t => Math.min(60, t + 5))} style={{ ...styles.btn(COLORS.cardBorder, true), width: 36, padding: "6px", fontSize: 18 }}>+</button>
+              </div>
+              <div style={{ color: COLORS.muted, fontSize: 11, marginTop: 5 }}>
+                Per question to answer
               </div>
             </div>
             <div style={{ gridColumn: "1/-1" }}>
@@ -753,22 +886,28 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
 
         <hr style={styles.divider} />
 
-        <button
-          style={{
-            ...styles.btn(players.length >= 2 ? COLORS.accent1 : "#333"),
-            fontSize: 18,
-            padding: "16px",
-            opacity: players.length >= 2 ? 1 : 0.5,
-          }}
-          disabled={players.length < 2}
-          onClick={() => {
-            if (players.length < 2) return;
-            getSocket().emit("startGame");
-            onStartGame && onStartGame();
-          }}
-        >
-          {players.length >= 2 ? "🚀 Start Game!" : `⏳ Waiting for players (${players.length}/2 min)`}
-        </button>
+        {(() => {
+          const hasBots  = players.some(p => p.isBot);
+          const canStart = players.length >= 2 || (isHost && hasBots);
+          return (
+            <button
+              style={{
+                ...styles.btn(canStart ? COLORS.accent1 : "#333"),
+                fontSize: 18,
+                padding: "16px",
+                opacity: canStart ? 1 : 0.5,
+              }}
+              disabled={!isHost || !canStart}
+              onClick={() => {
+                if (!canStart) return;
+                getSocket().emit("startGame");
+                onStartGame && onStartGame();
+              }}
+            >
+              {canStart ? "🚀 Start Game!" : `⏳ Waiting for players (${players.length}/2 min)`}
+            </button>
+          );
+        })()}
 
         <div style={{ textAlign: "center", marginTop: 12, color: COLORS.muted, fontSize: 12, fontWeight: 600 }}>
           Share code <span style={{ color: COLORS.accent2, fontWeight: 900 }}>{roomCode}</span> with friends to invite them
