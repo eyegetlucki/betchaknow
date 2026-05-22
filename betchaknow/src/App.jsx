@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AuthFlow       from './Auth';
 import LobbyFlow      from './Lobby';
 import GameFlow       from './Game';
@@ -8,7 +8,8 @@ import ShopPage       from './Shop';
 import FriendsFlow    from './Friends';
 import ChallengesPage from './Challenges';
 import BattlePassPage from './BattlePass';
-import { isLoggedIn } from './api';
+import { isLoggedIn, api, saveSession } from './api';
+import { supabase } from './supabaseClient';
 
 const NAV_ITEMS = [
   { id:"lobby",       icon:"🎯", label:"Play"    },
@@ -196,6 +197,25 @@ export default function App() {
   const [gateFor,  setGateFor]  = useState(null);     // section id being gated
 
   const loggedIn = isLoggedIn();
+
+  // Handle OAuth redirect callback (Google / Discord)
+  useEffect(() => {
+    if (!supabase) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session && !isLoggedIn()) {
+        try {
+          const provider = session.user.app_metadata?.provider || "google";
+          const result = await api.oauth({ provider, access_token: session.access_token });
+          saveSession({ token: result.token, refreshToken: result.refreshToken, username: result.profile?.username });
+          setGateFor(null);
+          setScreen("main");
+        } catch (e) {
+          console.error("OAuth exchange failed:", e.message);
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleNavClick = (id) => {
     if (id !== "lobby" && !loggedIn) {
