@@ -140,7 +140,8 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
   const [customQList, setCustomQList] = useState([]);
   const [tab, setTab] = useState("settings");
   const [copied, setCopied] = useState(false);
-  const [nameInput, setNameInput] = useState("");
+  const storedUsername = localStorage.getItem("bk_username") || "";
+  const [nameInput, setNameInput] = useState(loggedIn && storedUsername ? storedUsername : "");
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
@@ -164,10 +165,12 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
 
   const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
+  const effectiveName = (loggedIn && storedUsername) ? storedUsername : nameInput.trim();
+
   const handleCreate = () => {
-    if (!nameInput.trim()) return;
-    setPlayerName(nameInput);
-    localStorage.setItem("bk_username", nameInput.trim());
+    if (!effectiveName) return;
+    setPlayerName(effectiveName);
+    if (!loggedIn) localStorage.setItem("bk_username", effectiveName);
     const socket = connectSocket();
     socket.once("roomCreated", ({ code }) => {
       setRoomCode(code);
@@ -178,9 +181,9 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
   };
 
   const handleJoin = () => {
-    if (!nameInput.trim() || !joinCode.trim()) return;
-    setPlayerName(nameInput);
-    localStorage.setItem("bk_username", nameInput.trim());
+    if (!effectiveName || !joinCode.trim()) return;
+    setPlayerName(effectiveName);
+    if (!loggedIn) localStorage.setItem("bk_username", effectiveName);
     const code = joinCode.toUpperCase();
     const socket = connectSocket();
     socket.once("roomJoined", () => {
@@ -192,9 +195,9 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
   };
 
   const handleQuickMatch = () => {
-    if (!nameInput.trim()) return;
-    setPlayerName(nameInput);
-    localStorage.setItem("bk_username", nameInput.trim());
+    if (!effectiveName) return;
+    setPlayerName(effectiveName);
+    if (!loggedIn) localStorage.setItem("bk_username", effectiveName);
     const socket = connectSocket();
     const handleRoom = ({ code }) => {
       setRoomCode(code);
@@ -357,36 +360,59 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
         </h1>
         <p style={styles.subtitle}>Trivia · Wagering · Bluffing · Chaos</p>
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={styles.label}>Your Name</label>
-          <input
-            style={styles.input}
-            placeholder="Enter your name..."
-            value={nameInput}
-            onChange={e => setNameInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && nameInput && setScreen("options")}
-            maxLength={20}
-          />
-        </div>
-
-        {nameInput.trim() && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, animation: "popIn 0.3s ease" }}>
-            <button style={styles.btn(COLORS.accent1)} onClick={() => setScreen("create")}>
-              🏠 Create Private Lobby
-            </button>
-            <button style={styles.btn(COLORS.accent4)} onClick={() => setScreen("join")}>
-              🚪 Join with Code
-            </button>
-            <button style={styles.btn(COLORS.accent3)} onClick={handleQuickMatch}>
-              ⚡ Quick Match
-            </button>
+        {loggedIn && storedUsername ? (
+          <div style={{ animation: "popIn 0.3s ease" }}>
+            <div style={{
+              textAlign: "center", marginBottom: 20,
+              padding: "10px 16px", borderRadius: 12,
+              background: "#ffffff0a", border: `1px solid ${COLORS.cardBorder}`,
+            }}>
+              <span style={{ fontSize: 13, color: COLORS.muted, fontWeight: 700 }}>Playing as </span>
+              <span style={{ fontSize: 14, color: COLORS.text, fontWeight: 900 }}>{storedUsername}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <button style={styles.btn(COLORS.accent1)} onClick={() => setScreen("create")}>
+                🏠 Create Private Lobby
+              </button>
+              <button style={styles.btn(COLORS.accent4)} onClick={() => setScreen("join")}>
+                🚪 Join with Code
+              </button>
+              <button style={styles.btn(COLORS.accent3)} onClick={handleQuickMatch}>
+                ⚡ Quick Match
+              </button>
+            </div>
           </div>
-        )}
-
-        {!nameInput.trim() && (
-          <div style={{ textAlign: "center", color: COLORS.muted, fontSize: 14, fontWeight: 600, marginTop: 8 }}>
-            Enter your name to get started
-          </div>
+        ) : (
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <label style={styles.label}>Your Name</label>
+              <input
+                style={styles.input}
+                placeholder="Enter your name..."
+                value={nameInput}
+                onChange={e => setNameInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && nameInput && setScreen("options")}
+                maxLength={20}
+              />
+            </div>
+            {nameInput.trim() ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, animation: "popIn 0.3s ease" }}>
+                <button style={styles.btn(COLORS.accent1)} onClick={() => setScreen("create")}>
+                  🏠 Create Private Lobby
+                </button>
+                <button style={styles.btn(COLORS.accent4)} onClick={() => setScreen("join")}>
+                  🚪 Join with Code
+                </button>
+                <button style={styles.btn(COLORS.accent3)} onClick={handleQuickMatch}>
+                  ⚡ Quick Match
+                </button>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", color: COLORS.muted, fontSize: 14, fontWeight: 600, marginTop: 8 }}>
+                Enter your name to get started
+              </div>
+            )}
+          </>
         )}
 
         <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 24, flexWrap: "wrap" }}>
