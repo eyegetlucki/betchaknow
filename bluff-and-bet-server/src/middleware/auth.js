@@ -40,7 +40,7 @@ function signTokens(payload) {
   const refresh = jwt.sign(payload, config.jwt.refreshSecret, {
     expiresIn: config.jwt.refreshExpires,
   });
-  return { access, refresh };
+  return { token: access, refreshToken: refresh };
 }
 
 // Verify refresh token
