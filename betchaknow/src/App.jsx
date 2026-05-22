@@ -292,21 +292,33 @@ export default function App() {
   // Handle OAuth redirect callback (Google / Discord)
   useEffect(() => {
     if (!supabase) return;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session && !isLoggedIn()) {
-        try {
-          const provider = session.user.app_metadata?.provider || "google";
-          const oauthAvatar = session.user.user_metadata?.avatar_url || "";
-          const result = await api.oauth({ provider, access_token: session.access_token });
-          saveSession({ token: result.token, refreshToken: result.refreshToken, username: result.profile?.username, avatarUrl: oauthAvatar });
-          if (oauthAvatar) setAvatarUrl(oauthAvatar);
-          setLoggedIn(true);
-          setGateFor(null);
-          setScreen("main");
-          if (result.isNewUser) setShowUsernameSetup(true);
-        } catch (e) {
-          console.error("OAuth exchange failed:", e.message);
-        }
+
+    const exchangeSession = async (session) => {
+      if (!session || isLoggedIn()) return;
+      try {
+        const provider = session.user.app_metadata?.provider || "google";
+        const oauthAvatar = session.user.user_metadata?.avatar_url || "";
+        const result = await api.oauth({ provider, access_token: session.access_token });
+        saveSession({ token: result.token, refreshToken: result.refreshToken, username: result.profile?.username, avatarUrl: oauthAvatar });
+        if (oauthAvatar) setAvatarUrl(oauthAvatar);
+        setLoggedIn(true);
+        setGateFor(null);
+        setScreen("main");
+        if (result.isNewUser) setShowUsernameSetup(true);
+      } catch (e) {
+        console.error("OAuth exchange failed:", e.message);
+      }
+    };
+
+    // On mount: check for an existing Supabase session (catches OAuth redirects
+    // where SIGNED_IN fires before our listener is registered)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      exchangeSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
+        exchangeSession(session);
       }
     });
     return () => subscription.unsubscribe();
