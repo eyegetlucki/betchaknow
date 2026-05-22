@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { api, isLoggedIn } from "./api";
 
 const C = {
   bg:      "#08070f",
@@ -450,35 +451,68 @@ export default function ShopPage() {
   const [modalPack, setModalPack] = useState(null);
   const [toast,     setToast]     = useState(null);
 
+  useEffect(() => {
+    if (!isLoggedIn()) return;
+    Promise.all([api.me(), api.inventory()]).then(([me, inv]) => {
+      if (me?.profile) setBalance(me.profile.bluff_bucks ?? PLAYER_DATA.bluffBucks);
+      if (inv?.inventory) {
+        setOwned(new Set([
+          ...PLAYER_DATA.ownedIds,
+          ...inv.inventory.map(i => i.item_id),
+        ]));
+      }
+    }).catch(() => {});
+  }, []);
+
   const showToast = (msg, type="success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 2500);
   };
 
-  const handleItemClick = (item) => {
+  const handleItemClick = async (item) => {
     if (owned.has(item.id)) {
       const slotMap = { avatars:"avatar", themes:"theme", cards:"cards", fx:"fx", packs:"pack" };
       const slot = slotMap[item.cat];
       if (!slot) return;
       if (equipped[slot] === item.id) { showToast(`${item.name} is already equipped`, "info"); return; }
       setEquipped(prev => ({ ...prev, [slot]: item.id }));
+      if (isLoggedIn()) api.equip({ slot, itemId: item.id }).catch(() => {});
       showToast(`Equipped ${item.name}!`);
     } else {
       setModalItem(item);
     }
   };
 
-  const handleConfirmPurchase = (item) => {
-    setBalance(b => b - item.price);
-    setOwned(prev => new Set([...prev, item.id]));
-    setModalItem(null);
-    showToast(`Purchased ${item.name}!`);
+  const handleConfirmPurchase = async (item) => {
+    if (!isLoggedIn()) {
+      showToast("Sign in to purchase items", "error");
+      setModalItem(null);
+      return;
+    }
+    try {
+      const res = await api.purchase({ itemId: item.id });
+      setBalance(res.newBalance);
+      setOwned(prev => new Set([...prev, item.id]));
+      setModalItem(null);
+      showToast(`Purchased ${item.name}!`);
+    } catch (err) {
+      showToast(err.message || "Purchase failed", "error");
+    }
   };
 
-  const handleConfirmCoins = (pack) => {
-    setBalance(b => b + pack.coins + pack.bonus);
-    setModalPack(null);
-    showToast(`+${(pack.coins + pack.bonus).toLocaleString()} BK Bucks added!`);
+  const handleConfirmCoins = async (pack) => {
+    if (!isLoggedIn()) {
+      showToast("Sign in to buy coins", "error");
+      setModalPack(null);
+      return;
+    }
+    try {
+      const { url } = await api.checkoutCoins({ packId: pack.id });
+      setModalPack(null);
+      window.location.href = url;
+    } catch (err) {
+      showToast(err.message || "Could not start checkout", "error");
+    }
   };
 
   const filtered = useMemo(() => {

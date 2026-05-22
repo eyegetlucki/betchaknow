@@ -197,7 +197,7 @@ function LoginScreen({ onSwitch, onSuccess }) {
     setLoading(true);
     try {
       const data = await api.login({ email, password: pw });
-      saveSession({ token: data.token, refreshToken: data.refreshToken, username: data.user?.username });
+      saveSession({ token: data.token, refreshToken: data.refreshToken, username: data.profile?.username });
       onSuccess("game");
     } catch (err) {
       setErrors({ pw: err.message || "Login failed" });
