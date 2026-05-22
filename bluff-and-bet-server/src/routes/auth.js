@@ -165,7 +165,7 @@ router.post("/oauth", asyncHandler(async (req, res) => {
   await updateLoginStreak(userId);
   const profile = await getProfile(userId);
   const tokens = signTokens({ id: userId, username: profile.username, email: data.user.email });
-  res.json({ ...tokens, profile });
+  res.json({ ...tokens, profile, isNewUser: !existing });
 }));
 
 // ─── REFRESH TOKEN ────────────────────────────────────────────────────────────

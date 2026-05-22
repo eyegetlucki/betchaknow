@@ -25,11 +25,13 @@ const get   = (path)          => req(path);
 
 export const api = {
   // ── Auth ────────────────────────────────────────────────────────────────────
-  signup:         (b) => post("/api/auth/signup", b),
-  login:          (b) => post("/api/auth/login", b),
-  refresh:        ()  => post("/api/auth/refresh"),
-  verifyEmail:    (b) => post("/api/auth/verify-email", b),
-  forgotPassword: (b) => post("/api/auth/forgot-password", b),
+  signup:              (b) => post("/api/auth/signup", b),
+  login:               (b) => post("/api/auth/login", b),
+  refresh:             ()  => post("/api/auth/refresh"),
+  verifyEmail:         (b) => post("/api/auth/verify-email", b),
+  resendVerification:  (b) => post("/api/auth/resend-verification", b),
+  forgotPassword:      (b) => post("/api/auth/forgot-password", b),
+  oauth:               (b) => post("/api/auth/oauth", b),
 
   // ── Users ───────────────────────────────────────────────────────────────────
   me:             ()  => get("/api/users/me"),
