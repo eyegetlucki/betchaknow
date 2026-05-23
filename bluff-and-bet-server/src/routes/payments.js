@@ -44,8 +44,8 @@ router.post("/checkout/coins", requireAuth, asyncHandler(async (req, res) => {
       type:     "coins",
     },
     customer_email: req.user.email,
-    success_url: `${config.corsOrigin}/shop?purchase=success&pack=${packId}`,
-    cancel_url:  `${config.corsOrigin}/shop?purchase=cancelled`,
+    success_url: `${config.frontendUrl}/shop?purchase=success&pack=${packId}`,
+    cancel_url:  `${config.frontendUrl}/shop?purchase=cancelled`,
   });
 
   // Log pending purchase
@@ -76,8 +76,8 @@ router.post("/checkout/vip", requireAuth, asyncHandler(async (req, res) => {
     line_items: [{ price: config.stripe.prices.vipMonthly, quantity: 1 }],
     metadata: { userId: req.user.id, type: "vip" },
     customer_email: req.user.email,
-    success_url: `${config.corsOrigin}/battlepass?vip=activated`,
-    cancel_url:  `${config.corsOrigin}/battlepass`,
+    success_url: `${config.frontendUrl}/battlepass?vip=activated`,
+    cancel_url:  `${config.frontendUrl}/battlepass`,
   });
 
   res.json({ url: session.url, sessionId: session.id });
