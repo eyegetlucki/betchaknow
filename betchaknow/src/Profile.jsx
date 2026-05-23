@@ -58,44 +58,37 @@ const RANK_COLORS = [C.a6,"#c0c0c0","#ffd700","#00cfff","#ff6b6b",C.a5];
 const RANK_ICONS  = ["🥉","🥈","🥇","💎","🏆","👑"];
 
 const ALL_BADGES = [
-  { id:"b1",  icon:"🔥", name:"On Fire",         desc:"10 correct in a row",        rarity:"epic",   earned:true  },
-  { id:"b2",  icon:"🃏", name:"Master Bluffer",  desc:"50 successful bluffs",       rarity:"rare",   earned:true  },
-  { id:"b3",  icon:"💰", name:"The Shark",        desc:"Highest betting ROI",        rarity:"epic",   earned:true  },
-  { id:"b4",  icon:"👑", name:"Legend",           desc:"Reach Legend rank",          rarity:"legend", earned:true  },
-  { id:"b5",  icon:"🎰", name:"All-In King",      desc:"Win 5 All-In bets",          rarity:"rare",   earned:true  },
-  { id:"b6",  icon:"🏆", name:"Hall of Famer",    desc:"Top 10 all-time",            rarity:"legend", earned:true  },
-  { id:"b7",  icon:"⚡", name:"Speed Demon",      desc:"Fastest answer 100x",        rarity:"common", earned:true  },
-  { id:"b8",  icon:"🎯", name:"Sharpshooter",     desc:"90%+ accuracy in a game",    rarity:"rare",   earned:true  },
-  { id:"b9",  icon:"🌟", name:"MVP",              desc:"MVP award 20 times",         rarity:"epic",   earned:true  },
-  { id:"b10", icon:"🗓️", name:"Dedicated",        desc:"30-day login streak",        rarity:"common", earned:true  },
-  { id:"b11", icon:"🌍", name:"Globe Trotter",    desc:"Play with 50 countries",     rarity:"rare",   earned:false },
-  { id:"b12", icon:"💎", name:"Diamond Mind",     desc:"Diamond in 3 categories",    rarity:"epic",   earned:false },
-  { id:"b13", icon:"🏅", name:"Season I Champ",   desc:"Win Season I leaderboard",   rarity:"legend", earned:false },
-  { id:"b14", icon:"🤝", name:"Club Captain",     desc:"Found a club with 50 members",rarity:"rare",  earned:false },
-  { id:"b15", icon:"📚", name:"Trivia Scholar",   desc:"Answer 5000 questions",      rarity:"epic",   earned:false },
+  { id:"first_win",    icon:"🏆", name:"First Blood",    desc:"Win your first game",         rarity:"common" },
+  { id:"streak_5",     icon:"🔥", name:"On Fire",        desc:"5 correct answers in a row",  rarity:"common" },
+  { id:"bluffs_10",    icon:"🃏", name:"Bluffer",        desc:"Land 10 successful bluffs",   rarity:"common" },
+  { id:"bluffs_50",    icon:"🎭", name:"Master Bluffer", desc:"Land 50 successful bluffs",   rarity:"epic"   },
+  { id:"mvp",          icon:"🌟", name:"MVP",            desc:"Win MVP in a game",           rarity:"rare"   },
+  { id:"accuracy_90",  icon:"🎯", name:"Sharpshooter",   desc:"90%+ accuracy in a game",     rarity:"rare"   },
+  { id:"all_in_win",   icon:"🎰", name:"All-In King",    desc:"Win an All-In bet",           rarity:"rare"   },
+  { id:"games_10",     icon:"🗓️", name:"Dedicated",      desc:"Play 10 games",               rarity:"common" },
+  { id:"games_50",     icon:"📚", name:"Trivia Scholar", desc:"Play 50 games",               rarity:"rare"   },
+  { id:"level_10",     icon:"⭐", name:"Rising Star",    desc:"Reach level 10",              rarity:"rare"   },
+  { id:"level_20",     icon:"✨", name:"Level 20",       desc:"Reach level 20",              rarity:"rare"   },
+  { id:"level_30",     icon:"💫", name:"Level 30",       desc:"Reach level 30",              rarity:"epic"   },
+  { id:"level_50",     icon:"🐉", name:"Level 50",       desc:"Reach level 50",              rarity:"epic"   },
+  { id:"hall_of_fame", icon:"👑", name:"Hall of Fame",   desc:"Reach level 100",             rarity:"legend" },
+  { id:"high_roller",  icon:"💰", name:"High Roller",    desc:"Earn 10,000 season points",   rarity:"epic"   },
 ];
 
 const RARITY_COLORS = { common: C.muted, rare: C.a4, epic: C.a5, legend: C.a2 };
 const RARITY_BG     = { common: C.muted+"18", rare: C.a4+"18", epic: C.a5+"18", legend: C.a2+"18" };
 
-const ACHIEVEMENTS = [
-  { icon:"🎮", name:"First Blood",    desc:"Win your first game",          progress:1,   total:1,   done:true  },
-  { icon:"🔥", name:"Hot Streak",     desc:"Get 10 correct in a row",      progress:10,  total:10,  done:true  },
-  { icon:"🃏", name:"Bluff God",      desc:"Land 100 successful bluffs",   progress:94,  total:100, done:false },
-  { icon:"🏆", name:"Century Club",   desc:"Win 100 games",                progress:100, total:100, done:true  },
-  { icon:"💰", name:"High Roller",    desc:"Earn 100,000 total points",    progress:100, total:100, done:true  },
-  { icon:"📅", name:"Committed",      desc:"Log in 7 days in a row",       progress:7,   total:7,   done:true  },
-  { icon:"🌍", name:"World Traveler", desc:"Play with players from 20 countries", progress:14, total:20, done:false },
-  { icon:"⚡", name:"Speed King",     desc:"Answer first 200 times",       progress:156, total:200, done:false },
+const ACHIEVEMENT_SPECS = [
+  { icon:"🎮", name:"First Blood",   desc:"Win your first game",           total:1,     statKey:"wins"          },
+  { icon:"🔥", name:"Hot Streak",    desc:"Get 5 correct in a row",        total:5,     statKey:"longestStreak" },
+  { icon:"🃏", name:"Bluff God",     desc:"Land 50 successful bluffs",     total:50,    statKey:"bluffsLanded"  },
+  { icon:"🏆", name:"Century Club",  desc:"Win 100 games",                 total:100,   statKey:"wins"          },
+  { icon:"💰", name:"High Roller",   desc:"Earn 10,000 season points",     total:10000, statKey:"pointsEarned"  },
+  { icon:"📅", name:"Committed",     desc:"Play 10 games",                 total:10,    statKey:"gamesPlayed"   },
+  { icon:"🎯", name:"Sharpshooter",  desc:"Reach 70% overall accuracy",    total:70,    statKey:"accuracy"      },
+  { icon:"⚡", name:"Trivia Master", desc:"Play 50 games",                 total:50,    statKey:"gamesPlayed"   },
 ];
 
-const RECENT_GAMES = [
-  { date:"Today",      result:"Win",  pts:+420, accuracy:85, bluffs:2 },
-  { date:"Today",      result:"Win",  pts:+310, accuracy:79, bluffs:1 },
-  { date:"Yesterday",  result:"Loss", pts:-120, accuracy:60, bluffs:0 },
-  { date:"Yesterday",  result:"Win",  pts:+580, accuracy:92, bluffs:3 },
-  { date:"2 days ago", result:"Loss", pts:-85,  accuracy:55, bluffs:1 },
-];
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=DM+Sans:wght@400;500;600;700;800&display=swap');
@@ -159,9 +152,9 @@ function VIPBadge() {
   );
 }
 
-function BadgePicker({ equipped, onEquip }) {
+function BadgePicker({ allBadges, equipped, onEquip }) {
   const [picking, setPicking] = useState(null);
-  const earned = ALL_BADGES.filter(b => b.earned);
+  const earned = allBadges.filter(b => b.earned);
 
   const handleSlotClick = (i) => setPicking(i === picking ? null : i);
   const handleBadgePick = (badge) => {
@@ -233,14 +226,18 @@ function BadgePicker({ equipped, onEquip }) {
   );
 }
 
-export default function ProfilePage() {
-  const [tab,        setTab]       = useState("overview");
-  const [equipped,   setEquipped]  = useState([ALL_BADGES[3], ALL_BADGES[2], ALL_BADGES[8]]);
-  const [profilePic, setProfilePic] = useState(null);
-  const [avatarHover, setAvatarHover] = useState(false);
-  const [player,     setPlayer]    = useState(PLAYER);
-  const [categories, setCategories] = useState(CATEGORIES);
-  const [recentGames, setRecentGames] = useState(RECENT_GAMES);
+export default function ProfilePage({ onAvatarChange }) {
+  const [tab,           setTab]          = useState("overview");
+  const [badges,        setBadges]       = useState(() => ALL_BADGES.map(b => ({ ...b, earned: false })));
+  const [equipped,      setEquipped]     = useState([null, null, null]);
+  const [profilePic,    setProfilePic]   = useState(null);
+  const [avatarHover,   setAvatarHover]  = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError,   setAvatarError]  = useState("");
+  const [player,        setPlayer]       = useState(null);
+  const [loading,       setLoading]      = useState(true);
+  const [categories,    setCategories]   = useState([]);
+  const [recentGames,   setRecentGames]  = useState([]);
   const fileInputRef = useRef(null);
 
   const [editingUsername,  setEditingUsername]  = useState(false);
@@ -269,58 +266,120 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    if (!isLoggedIn()) return;
+    const buildFallback = () => ({
+      username:   localStorage.getItem("bk_username") || "Guest",
+      avatar:     localStorage.getItem("bk_avatar")   || "🎯",
+      title: "", level: 1, xp: 0, xpNext: 1000, bluffBucks: 0,
+      country: "", vip: false, joinDate: "",
+      stats: { gamesPlayed:0, wins:0, winRate:0, totalCorrect:0, accuracy:0, bluffsLanded:0, biggestWin:0, longestStreak:0, allInWins:0, pointsEarned:0 },
+    });
+
+    if (!isLoggedIn()) {
+      setPlayer(buildFallback());
+      setCategories(CATEGORIES.map(c => ({ ...c, rank: 1, progress: 0 })));
+      setLoading(false);
+      return;
+    }
+
     api.me().then(d => {
-      const p = d.profile;
-      if (!p) return;
-      setPlayer(prev => ({
-        ...prev,
-        username:   p.username   || prev.username,
-        avatar:     p.avatar_icon || prev.avatar,
-        level:      p.level      || prev.level,
-        xp:         p.xp         ?? prev.xp,
-        xpNext:     p.xp_next    || prev.xpNext,
-        bluffBucks: p.coins      ?? prev.bluffBucks,
-        country:    p.country    || prev.country,
-        vip:        p.is_vip     ?? prev.vip,
-        title:      p.title      || prev.title,
-        joinDate:   p.created_at ? new Date(p.created_at).toLocaleDateString("en-US",{month:"long",year:"numeric"}) : prev.joinDate,
+      const p = d.profile || {};
+      // Sync avatar from DB to localStorage/nav
+      const dbAvatar = p.avatar_icon || "";
+      if (dbAvatar && dbAvatar !== localStorage.getItem("bk_avatar")) {
+        localStorage.setItem("bk_avatar", dbAvatar);
+        onAvatarChange?.(dbAvatar);
+      }
+      // Sync username from DB to localStorage
+      const dbUsername = p.username || "";
+      if (dbUsername && dbUsername !== localStorage.getItem("bk_username")) {
+        localStorage.setItem("bk_username", dbUsername);
+      }
+      const storedCountry = (p.country && p.country !== "Unknown") ? p.country : "";
+      setPlayer({
+        username:   dbUsername    || localStorage.getItem("bk_username") || "Guest",
+        avatar:     dbAvatar      || localStorage.getItem("bk_avatar")   || "🎯",
+        title:      p.title       || "",
+        level:      p.level       || 1,
+        xp:         p.xp          ?? 0,
+        xpNext:     p.xp_next     || 1000,
+        bluffBucks: p.coins       ?? 0,
+        country:    storedCountry,
+        vip:        p.is_vip      ?? false,
+        joinDate:   p.created_at  ? new Date(p.created_at).toLocaleDateString("en-US",{month:"long",year:"numeric"}) : "",
         stats: {
-          ...prev.stats,
-          gamesPlayed:   p.games_played   ?? prev.stats.gamesPlayed,
-          wins:          p.games_won       ?? prev.stats.wins,
-          winRate:       p.games_played > 0 ? Math.round((p.games_won / p.games_played) * 100) : prev.stats.winRate,
-          accuracy:      p.accuracy        ?? prev.stats.accuracy,
-          bluffsLanded:  p.bluffs_landed   ?? prev.stats.bluffsLanded,
-          biggestWin:    p.biggest_win     ?? prev.stats.biggestWin,
-          longestStreak: p.longest_streak  ?? prev.stats.longestStreak,
-          allInWins:     p.all_in_wins     ?? prev.stats.allInWins,
-          pointsEarned:  p.season_points   ?? prev.stats.pointsEarned,
+          gamesPlayed:   p.games_played   ?? 0,
+          wins:          p.games_won       ?? 0,
+          winRate:       p.games_played > 0 ? Math.round((p.games_won / p.games_played) * 100) : 0,
+          totalCorrect:  0,
+          accuracy:      p.accuracy        ?? 0,
+          bluffsLanded:  p.bluffs_landed   ?? 0,
+          biggestWin:    p.biggest_win     ?? 0,
+          longestStreak: p.longest_streak  ?? 0,
+          allInWins:     p.all_in_wins     ?? 0,
+          pointsEarned:  p.season_points   ?? 0,
         },
+      });
+
+      // Auto-detect country/state via IP if not yet set
+      if (!storedCountry) {
+        fetch("https://ipapi.co/json/")
+          .then(r => r.json())
+          .then(geo => {
+            if (!geo.country_code) return;
+            const updates = { country: geo.country_code };
+            if (geo.region) updates.state = geo.region;
+            api.updateMe(updates).catch(() => {});
+            setPlayer(prev => ({ ...prev, country: geo.country_code }));
+          })
+          .catch(() => {});
+      }
+
+      // Always show all 7 categories; use real DB data where it exists, Bronze/0% for unplayed
+      setCategories(CATEGORIES.map(c => {
+        const m = d.mastery?.find(x => x.category === c.id);
+        return m ? { ...c, rank: m.rank || 1, progress: m.progress ?? 0 } : { ...c, rank: 1, progress: 0 };
       }));
 
-      if (d.mastery?.length > 0) {
-        setCategories(d.mastery.map(m => {
-          const existing = CATEGORIES.find(c => c.id === m.category) || {};
-          return { ...existing, id: m.category, rank: m.rank || 1, progress: m.progress || 0 };
-        }));
+      // Badges: mark earned based on DB badge_ids
+      const earnedIds = new Set((d.badges || []).map(b => b.badge_id));
+      setBadges(ALL_BADGES.map(b => ({ ...b, earned: earnedIds.has(b.id) })));
+
+      // Equipped showcase slots from DB
+      if (d.equipped) {
+        const slots = [d.equipped.badge1, d.equipped.badge2, d.equipped.badge3];
+        setEquipped(slots.map(id => id ? ALL_BADGES.find(b => b.id === id) || null : null));
       }
 
       if (d.history?.length > 0) {
         setRecentGames(d.history.map(g => ({
           date:     g.played_at ? new Date(g.played_at).toLocaleDateString() : "Unknown",
-          result:   g.won ? "Win" : "Loss",
+          result:   g.result === "win" ? "Win" : "Loss",
           pts:      g.points_delta ?? 0,
           accuracy: g.accuracy ?? 0,
           bluffs:   g.bluffs_landed ?? 0,
         })));
       }
-    }).catch(() => {});
+    }).catch(() => {
+      setPlayer(buildFallback());
+      setCategories(CATEGORIES.map(c => ({ ...c, rank: 1, progress: 0 })));
+    }).finally(() => setLoading(false));
   }, []);
 
   const handleEquip = (slot, badge) => {
     setEquipped(prev => { const next = [...prev]; next[slot] = badge; return next; });
   };
+
+  if (loading) {
+    return (
+      <div style={{ minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <style>{css}</style>
+        <div style={{ textAlign:"center" }}>
+          <div style={{ fontSize:48, animation:"float 1s ease-in-out infinite" }}>🎯</div>
+          <div style={{ color:C.muted, fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:14, marginTop:14 }}>Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
 
   const xpPct = Math.round((player.xp / player.xpNext) * 100);
 
@@ -350,37 +409,75 @@ export default function ProfilePage() {
                 type="file"
                 accept="image/*"
                 style={{ display:"none" }}
-                onChange={e => {
+                onChange={async e => {
                   const f = e.target.files[0];
-                  if (f) setProfilePic(URL.createObjectURL(f));
+                  if (!f) return;
+                  e.target.value = "";
+                  setAvatarError("");
+
+                  // Instant local preview
+                  const localUrl = URL.createObjectURL(f);
+                  setProfilePic(localUrl);
+
+                  if (!isLoggedIn()) return;
+
+                  setAvatarUploading(true);
+                  try {
+                    const base64 = await new Promise((res, rej) => {
+                      const r = new FileReader();
+                      r.onload  = () => res(r.result.split(",")[1]);
+                      r.onerror = rej;
+                      r.readAsDataURL(f);
+                    });
+                    const { avatarUrl } = await api.uploadAvatar({ imageBase64: base64, contentType: f.type });
+                    setProfilePic(avatarUrl);
+                    setPlayer(prev => ({ ...prev, avatar: avatarUrl }));
+                    localStorage.setItem("bk_avatar", avatarUrl);
+                    onAvatarChange?.(avatarUrl);
+                  } catch (err) {
+                    setAvatarError(err.message || "Upload failed");
+                  } finally {
+                    setAvatarUploading(false);
+                  }
                 }}
               />
               <div
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => !avatarUploading && fileInputRef.current?.click()}
                 onMouseEnter={() => setAvatarHover(true)}
                 onMouseLeave={() => setAvatarHover(false)}
                 title="Click to upload profile picture"
                 style={{
                   width:88, height:88, borderRadius:24,
-                  background: profilePic ? "transparent" : `linear-gradient(135deg,${C.a5}44,${C.a4}44)`,
-                  border:`2px solid ${C.a5}88`,
+                  background: (profilePic || player.avatar?.startsWith?.("http")) ? "transparent" : `linear-gradient(135deg,${C.a5}44,${C.a4}44)`,
+                  border:`2px solid ${avatarUploading ? C.a4 : C.a5}88`,
                   display:"flex", alignItems:"center", justifyContent:"center",
                   fontSize:44, boxShadow:`0 0 32px ${C.a5}44`,
                   animation:"float 4s ease-in-out infinite",
-                  cursor:"pointer", overflow:"hidden", position:"relative",
+                  cursor: avatarUploading ? "wait" : "pointer",
+                  overflow:"hidden", position:"relative",
                 }}>
-                {profilePic
-                  ? <img src={profilePic} alt="Profile" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                {(profilePic || player.avatar?.startsWith?.("http"))
+                  ? <img src={profilePic || player.avatar} alt="Profile" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
                   : player.avatar
                 }
                 <div style={{
                   position:"absolute", inset:0, borderRadius:22,
                   background:"#00000077",
                   display:"flex", alignItems:"center", justifyContent:"center",
-                  opacity: avatarHover ? 1 : 0, transition:"opacity 0.2s",
+                  opacity: (avatarHover || avatarUploading) ? 1 : 0, transition:"opacity 0.2s",
                   fontSize:22,
-                }}>📷</div>
+                }}>
+                  {avatarUploading
+                    ? <div style={{ width:24, height:24, border:"3px solid #fff", borderTopColor:"transparent", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} />
+                    : "📷"
+                  }
+                </div>
               </div>
+              {avatarError && (
+                <div style={{ position:"absolute", top:"100%", left:"50%", transform:"translateX(-50%)", marginTop:6, whiteSpace:"nowrap", fontSize:11, color:C.a1, fontWeight:700, background:C.card2, border:`1px solid ${C.a1}44`, borderRadius:8, padding:"4px 10px" }}>
+                  {avatarError}
+                </div>
+              )}
               <div style={{
                 position:"absolute", bottom:-6, right:-6,
                 background:C.a2, color:"#111", borderRadius:10,
@@ -518,7 +615,7 @@ export default function ProfilePage() {
 
             <div style={{ background:C.card2, border:`1px solid ${C.border}`, borderRadius:20, padding:20 }}>
               <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:20, marginBottom:16 }}>🏅 Badge Showcase</h3>
-              <BadgePicker equipped={equipped} onEquip={handleEquip} />
+              <BadgePicker allBadges={badges} equipped={equipped} onEquip={handleEquip} />
             </div>
 
             <div>
@@ -588,10 +685,10 @@ export default function ProfilePage() {
           <div style={{ display:"flex", flexDirection:"column", gap:20, animation:"fadeUp 0.4s ease" }}>
             <div style={{ background:C.card2, border:`1px solid ${C.border}`, borderRadius:20, padding:20 }}>
               <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:20, marginBottom:16 }}>🏅 Badge Showcase</h3>
-              <BadgePicker equipped={equipped} onEquip={handleEquip} />
+              <BadgePicker allBadges={badges} equipped={equipped} onEquip={handleEquip} />
             </div>
             {["legend","epic","rare","common"].map(rarity => {
-              const group = ALL_BADGES.filter(b => b.rarity === rarity);
+              const group = badges.filter(b => b.rarity === rarity);
               return (
                 <div key={rarity}>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
@@ -616,13 +713,19 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {tab === "achievements" && (
+        {tab === "achievements" && (() => {
+          const achievements = ACHIEVEMENT_SPECS.map(a => {
+            const val = player.stats[a.statKey] || 0;
+            const progress = Math.min(a.total, val);
+            return { ...a, progress, done: val >= a.total };
+          });
+          return (
           <div style={{ display:"flex", flexDirection:"column", gap:12, animation:"fadeUp 0.4s ease" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
               <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:22 }}>🎖️ Achievements</h3>
-              <span style={{ fontSize:12, color:C.muted, fontWeight:600 }}>{ACHIEVEMENTS.filter(a=>a.done).length} / {ACHIEVEMENTS.length} complete</span>
+              <span style={{ fontSize:12, color:C.muted, fontWeight:600 }}>{achievements.filter(a=>a.done).length} / {achievements.length} complete</span>
             </div>
-            {ACHIEVEMENTS.map((a, i) => {
+            {achievements.map((a, i) => {
               const pct = Math.min(100, Math.round((a.progress/a.total)*100));
               return (
                 <div key={i} style={{ background:C.card2, border:`1px solid ${a.done ? C.a3+"44" : C.border}`, borderRadius:16, padding:"14px 18px", display:"flex", gap:14, alignItems:"center", animation:`fadeUp 0.4s ease ${i*0.06}s both` }}>
@@ -639,7 +742,8 @@ export default function ProfilePage() {
               );
             })}
           </div>
-        )}
+          );
+        })()}
 
         {tab === "history" && (
           <div style={{ display:"flex", flexDirection:"column", gap:12, animation:"fadeUp 0.4s ease" }}>

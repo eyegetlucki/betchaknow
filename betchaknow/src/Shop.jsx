@@ -441,27 +441,47 @@ function Toast({ msg, type="success" }) {
   );
 }
 
+const FREE_ITEM_IDS = PLAYER_DATA.ownedIds;
+
 export default function ShopPage() {
   const [view,      setView]      = useState("shop");
   const [cat,       setCat]       = useState("featured");
-  const [balance,   setBalance]   = useState(PLAYER_DATA.bluffBucks);
-  const [owned,     setOwned]     = useState(new Set(PLAYER_DATA.ownedIds));
-  const [equipped,  setEquipped]  = useState({ ...PLAYER_DATA.equipped });
+  const [balance,   setBalance]   = useState(null);
+  const [owned,     setOwned]     = useState(new Set(FREE_ITEM_IDS));
+  const [equipped,  setEquipped]  = useState({});
+  const [loading,   setLoading]   = useState(isLoggedIn());
   const [modalItem, setModalItem] = useState(null);
   const [modalPack, setModalPack] = useState(null);
   const [toast,     setToast]     = useState(null);
 
   useEffect(() => {
-    if (!isLoggedIn()) return;
+    const params = new URLSearchParams(window.location.search);
+    const purchaseResult = params.get("purchase");
+    if (purchaseResult) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
+    if (!isLoggedIn()) { setLoading(false); return; }
     Promise.all([api.me(), api.inventory()]).then(([me, inv]) => {
-      if (me?.profile) setBalance(me.profile.bluff_bucks ?? PLAYER_DATA.bluffBucks);
-      if (inv?.inventory) {
-        setOwned(new Set([
-          ...PLAYER_DATA.ownedIds,
-          ...inv.inventory.map(i => i.item_id),
-        ]));
+      if (me?.profile) setBalance(me.profile.bluff_bucks ?? 0);
+      setOwned(new Set([
+        ...FREE_ITEM_IDS,
+        ...(inv?.inventory?.map(i => i.item_id) || []),
+      ]));
+      if (me?.equipped) {
+        setEquipped(me.equipped);
+        if (me.equipped.theme) localStorage.setItem("bk_equipped_theme", me.equipped.theme);
+        if (me.equipped.fx)    localStorage.setItem("bk_equipped_fx",    me.equipped.fx);
       }
-    }).catch(() => {});
+      if (purchaseResult === "success") {
+        setView("coinstore");
+        setTimeout(() => showToast("🎉 Coins added to your account!", "success"), 300);
+      } else if (purchaseResult === "cancelled") {
+        setTimeout(() => showToast("Purchase cancelled", "info"), 300);
+      }
+    }).catch(() => {
+      setBalance(0);
+    }).finally(() => setLoading(false));
   }, []);
 
   const showToast = (msg, type="success") => {
@@ -476,6 +496,8 @@ export default function ShopPage() {
       if (!slot) return;
       if (equipped[slot] === item.id) { showToast(`${item.name} is already equipped`, "info"); return; }
       setEquipped(prev => ({ ...prev, [slot]: item.id }));
+      if (slot === "theme") localStorage.setItem("bk_equipped_theme", item.id);
+      if (slot === "fx")    localStorage.setItem("bk_equipped_fx",    item.id);
       if (isLoggedIn()) api.equip({ slot, itemId: item.id }).catch(() => {});
       showToast(`Equipped ${item.name}!`);
     } else {
@@ -559,7 +581,7 @@ export default function ShopPage() {
               <CoinIcon size={20} />
               <div>
                 <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color:C.a2, lineHeight:1 }}>
-                  {balance.toLocaleString()}
+                  {loading ? "···" : (balance ?? 0).toLocaleString()}
                 </div>
                 <div style={{ fontSize:10, color:C.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:0.5 }}>BK Bucks</div>
               </div>
@@ -613,7 +635,7 @@ export default function ShopPage() {
 
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:14 }}>
               {filtered.map(item => (
-                <ItemCard key={item.id} item={item} owned={owned.has(item.id)} equipped={isEquipped(item)} balance={balance} onClick={handleItemClick} />
+                <ItemCard key={item.id} item={item} owned={owned.has(item.id)} equipped={isEquipped(item)} balance={balance ?? 0} onClick={handleItemClick} />
               ))}
             </div>
 
@@ -686,7 +708,7 @@ export default function ShopPage() {
                   </h3>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(180px, 1fr))", gap:12 }}>
                     {items.map(item => (
-                      <ItemCard key={item.id} item={item} owned={true} equipped={isEquipped(item)} balance={balance} onClick={handleItemClick} />
+                      <ItemCard key={item.id} item={item} owned={true} equipped={isEquipped(item)} balance={balance ?? 0} onClick={handleItemClick} />
                     ))}
                   </div>
                 </div>
@@ -732,7 +754,7 @@ export default function ShopPage() {
         )}
       </div>
 
-      <PurchaseModal item={modalItem} balance={balance} onConfirm={handleConfirmPurchase} onCancel={() => setModalItem(null)} />
+      <PurchaseModal item={modalItem} balance={balance ?? 0} onConfirm={handleConfirmPurchase} onCancel={() => setModalItem(null)} />
       <CoinPackModal pack={modalPack} onConfirm={handleConfirmCoins} onCancel={() => setModalPack(null)} />
     </div>
   );

@@ -35,7 +35,7 @@ const TOGGLES = [
 ];
 
 const normalizePlayers = (sp) =>
-  sp.map(p => ({ id: p.id, name: p.username, color: p.color, isHost: p.isHost, isBot: p.isBot || false, botDifficulty: p.botDifficulty || null }));
+  sp.map(p => ({ id: p.id, name: p.username, color: p.color, avatar: p.avatar || null, isHost: p.isHost, isBot: p.isBot || false, botDifficulty: p.botDifficulty || null }));
 
 function FloatingParticle({ style }) {
   return (
@@ -116,7 +116,16 @@ function PlayerChip({ player, onKick }) {
         fontWeight: 900,
         color: "#fff",
         fontFamily: "'Nunito', sans-serif",
-      }}>{player.isBot ? "🤖" : player.name[0]}</div>
+        overflow: "hidden",
+        flexShrink: 0,
+      }}>
+        {player.isBot
+          ? "🤖"
+          : (player.avatar?.startsWith?.("http") || player.avatar?.startsWith?.("blob:"))
+            ? <img src={player.avatar} alt={player.name[0]} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : player.name[0]
+        }
+      </div>
       <span style={{ color: COLORS.text, fontFamily: "'Nunito', sans-serif", fontWeight: 700, fontSize: 14 }}>
         {player.name}
       </span>
@@ -163,6 +172,8 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
   const [nameInput, setNameInput] = useState(loggedIn && storedUsername ? storedUsername : "");
   const [pulse, setPulse] = useState(false);
   const [botDifficulty, setBotDifficulty] = useState("medium");
+  const [connecting, setConnecting] = useState(false);
+  const [connectError, setConnectError] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => setPulse(p => !p), 2000);
@@ -204,19 +215,42 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
 
   const effectiveName = (loggedIn && storedUsername) ? storedUsername : nameInput.trim();
 
+  const socketAction = (buildEmit) => {
+    setConnecting(true);
+    setConnectError("");
+    const socket = connectSocket();
+
+    const onConnectError = (err) => {
+      setConnecting(false);
+      setConnectError("Cannot reach game server — make sure the server is running on port 3001.");
+      socket.off("connect_error", onConnectError);
+    };
+    socket.once("connect_error", onConnectError);
+
+    const doEmit = () => {
+      socket.off("connect_error", onConnectError);
+      buildEmit(socket);
+    };
+
+    if (socket.connected) doEmit();
+    else socket.once("connect", doEmit);
+  };
+
   const handleCreate = () => {
-    if (!effectiveName) return;
+    if (!effectiveName) { setConnectError("Enter your name first."); return; }
     setPlayerName(effectiveName);
     if (!loggedIn) localStorage.setItem("bk_username", effectiveName);
-    const socket = connectSocket();
-    socket.once("roomCreated", ({ code, state }) => {
-      setRoomCode(code);
-      if (state?.players) setPlayers(normalizePlayers(state.players));
-      setIsHost(true);
-      setScreen("lobby");
+    socketAction((socket) => {
+      socket.once("roomCreated", ({ code, state }) => {
+        setConnecting(false);
+        setRoomCode(code);
+        if (state?.players) setPlayers(normalizePlayers(state.players));
+        setIsHost(true);
+        setScreen("lobby");
+      });
+      socket.once("error", (msg) => { setConnecting(false); setConnectError(typeof msg === "string" ? msg : "Server error"); });
+      socket.emit("createRoom", { isPrivate: true, settings: { rounds, timerSecs: timer } });
     });
-    socket.once("error", (msg) => alert("Error: " + msg));
-    socket.emit("createRoom", { isPrivate: true, settings: { rounds, timerSecs: timer } });
   };
 
   const handleJoin = () => {
@@ -224,32 +258,36 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
     setPlayerName(effectiveName);
     if (!loggedIn) localStorage.setItem("bk_username", effectiveName);
     const code = joinCode.toUpperCase();
-    const socket = connectSocket();
-    socket.once("roomJoined", ({ state }) => {
-      setRoomCode(code);
-      if (state?.players) setPlayers(normalizePlayers(state.players));
-      setIsHost(false);
-      setScreen("lobby");
+    socketAction((socket) => {
+      socket.once("roomJoined", ({ state }) => {
+        setConnecting(false);
+        setRoomCode(code);
+        if (state?.players) setPlayers(normalizePlayers(state.players));
+        setIsHost(false);
+        setScreen("lobby");
+      });
+      socket.once("error", (msg) => { setConnecting(false); setConnectError(typeof msg === "string" ? msg : "Server error"); });
+      socket.emit("joinRoom", { code });
     });
-    socket.once("error", (msg) => alert("Error: " + msg));
-    socket.emit("joinRoom", { code });
   };
 
   const handleQuickMatch = () => {
     if (!effectiveName) return;
     setPlayerName(effectiveName);
     if (!loggedIn) localStorage.setItem("bk_username", effectiveName);
-    const socket = connectSocket();
-    const handleRoom = ({ code: c, state }, asHost) => {
-      setRoomCode(c);
-      if (state?.players) setPlayers(normalizePlayers(state.players));
-      setIsHost(asHost);
-      setScreen("lobby");
-    };
-    socket.once("roomCreated", (d) => handleRoom(d, true));
-    socket.once("roomJoined",  (d) => handleRoom(d, false));
-    socket.once("error", (msg) => alert("Error: " + msg));
-    socket.emit("quickMatch");
+    socketAction((socket) => {
+      const handleRoom = ({ code: c, state }, asHost) => {
+        setConnecting(false);
+        setRoomCode(c);
+        if (state?.players) setPlayers(normalizePlayers(state.players));
+        setIsHost(asHost);
+        setScreen("lobby");
+      };
+      socket.once("roomCreated", (d) => handleRoom(d, true));
+      socket.once("roomJoined",  (d) => handleRoom(d, false));
+      socket.once("error", (msg) => { setConnecting(false); setConnectError(typeof msg === "string" ? msg : "Server error"); });
+      socket.emit("quickMatch");
+    });
   };
 
   const handleBack = () => {
@@ -421,15 +459,20 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
               <span style={{ fontSize: 13, color: COLORS.muted, fontWeight: 700 }}>Playing as </span>
               <span style={{ fontSize: 14, color: COLORS.text, fontWeight: 900 }}>{storedUsername}</span>
             </div>
+            {connectError && (
+              <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 10, background: COLORS.accent1 + "18", border: `1px solid ${COLORS.accent1}44`, color: COLORS.accent1, fontSize: 13, fontWeight: 700 }}>
+                ⚠ {connectError}
+              </div>
+            )}
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <button style={styles.btn(COLORS.accent1)} onClick={() => setScreen("create")}>
+              <button style={styles.btn(COLORS.accent1)} onClick={() => { setConnectError(""); setScreen("create"); }}>
                 🏠 Create Private Lobby
               </button>
-              <button style={styles.btn(COLORS.accent4)} onClick={() => setScreen("join")}>
+              <button style={styles.btn(COLORS.accent4)} onClick={() => { setConnectError(""); setScreen("join"); }}>
                 🚪 Join with Code
               </button>
-              <button style={styles.btn(COLORS.accent3)} onClick={handleQuickMatch}>
-                ⚡ Quick Match
+              <button style={{ ...styles.btn(connecting ? "#555" : COLORS.accent3), opacity: connecting ? 0.7 : 1 }} onClick={handleQuickMatch} disabled={connecting}>
+                {connecting ? "⏳ Connecting..." : "⚡ Quick Match"}
               </button>
             </div>
           </div>
@@ -515,12 +558,17 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
               maxLength={6}
             />
           </div>
+          {connectError && (
+            <div style={{ padding: "10px 14px", borderRadius: 10, background: COLORS.accent1 + "18", border: `1px solid ${COLORS.accent1}44`, color: COLORS.accent1, fontSize: 13, fontWeight: 700 }}>
+              ⚠ {connectError}
+            </div>
+          )}
           <button
-            style={styles.btn(joinCode.length === 6 ? COLORS.accent4 : "#333")}
+            style={{ ...styles.btn(connecting || joinCode.length < 4 ? "#333" : COLORS.accent4), opacity: connecting ? 0.7 : 1 }}
             onClick={handleJoin}
-            disabled={joinCode.length < 4}
+            disabled={connecting || joinCode.length < 4}
           >
-            Join Game →
+            {connecting ? "⏳ Connecting..." : "Join Game →"}
           </button>
         </div>
       </div>
@@ -634,9 +682,18 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
           </div>
         )}
 
-        <div style={{ marginTop: 24 }}>
-          <button style={styles.btn(COLORS.accent1)} onClick={handleCreate}>
-            🚀 Create Lobby
+        {connectError && (
+          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: COLORS.accent1 + "18", border: `1px solid ${COLORS.accent1}44`, color: COLORS.accent1, fontSize: 13, fontWeight: 700, fontFamily: "'Nunito', sans-serif" }}>
+            ⚠ {connectError}
+          </div>
+        )}
+        <div style={{ marginTop: 16 }}>
+          <button
+            style={{ ...styles.btn(connecting ? "#555" : COLORS.accent1), opacity: connecting ? 0.7 : 1 }}
+            onClick={handleCreate}
+            disabled={connecting}
+          >
+            {connecting ? "⏳ Connecting..." : "🚀 Create Lobby"}
           </button>
         </div>
       </div>

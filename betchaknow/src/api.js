@@ -36,6 +36,7 @@ export const api = {
   // ── Users ───────────────────────────────────────────────────────────────────
   me:             ()  => get("/api/users/me"),
   updateMe:       (b) => patch("/api/users/me", b),
+  uploadAvatar:   (b) => post("/api/users/me/avatar", b),
   publicProfile:  (u) => get(`/api/users/${u}`),
 
   // ── Shop ────────────────────────────────────────────────────────────────────
@@ -95,5 +96,13 @@ export function getUsername() {
 }
 
 export function isLoggedIn() {
-  return !!localStorage.getItem("bk_token");
+  const token = localStorage.getItem("bk_token");
+  if (!token) return false;
+  try {
+    const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const { exp } = JSON.parse(atob(b64));
+    return exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
 }

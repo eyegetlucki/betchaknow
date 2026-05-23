@@ -1,20 +1,28 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { getSocket, connectSocket } from "./socket";
 
-const C = {
-  bg: "#0f0e17",
-  card: "#1a1828",
-  cardBorder: "#2e2b4a",
-  accent1: "#ff6b6b",
-  accent2: "#ffd93d",
-  accent3: "#6bcb77",
-  accent4: "#4d96ff",
-  accent5: "#c77dff",
-  text: "#fffffe",
-  muted: "#a7a9be",
+const THEMES = {
+  th_neon:      { bg:"#0f0e17", card:"#1a1828", cardBorder:"#2e2b4a", accent1:"#ff6b6b", accent2:"#ffd93d", accent3:"#6bcb77", accent4:"#4d96ff", accent5:"#c77dff", text:"#fffffe", muted:"#a7a9be" },
+  th_space:     { bg:"#050810", card:"#0c1023", cardBorder:"#162040", accent1:"#ff4757", accent2:"#eccc68", accent3:"#2ed573", accent4:"#1e90ff", accent5:"#a29bfe", text:"#e8f4fd", muted:"#7f8fa6" },
+  th_tropical:  { bg:"#071a2c", card:"#0d2438", cardBorder:"#1a3a52", accent1:"#ff6348", accent2:"#ffa502", accent3:"#26de81", accent4:"#45aaf2", accent5:"#fd9644", text:"#f1f2f6", muted:"#747d8c" },
+  th_haunted:   { bg:"#0d0010", card:"#160820", cardBorder:"#2d1045", accent1:"#ff4500", accent2:"#e17055", accent3:"#a29bfe", accent4:"#6c5ce7", accent5:"#fd79a8", text:"#dfe6e9", muted:"#7f8c8d" },
+  th_cyberpunk: { bg:"#06060f", card:"#0f0f1a", cardBorder:"#1a082e", accent1:"#ff0080", accent2:"#f9ca24", accent3:"#00ff88", accent4:"#00b4d8", accent5:"#c77dff",  text:"#f0f0ff", muted:"#8892b0" },
+  th_golden:    { bg:"#0c0a06", card:"#1a1508", cardBorder:"#2e2510", accent1:"#e55039", accent2:"#f0a500", accent3:"#27ae60", accent4:"#d4ac0d", accent5:"#e67e22",  text:"#fff8e7", muted:"#a98555" },
 };
 
+const C = THEMES[localStorage.getItem("bk_equipped_theme") || "th_neon"] || THEMES.th_neon;
+
 const PLAYER_COLORS = [C.accent4, C.accent1, C.accent3, C.accent5, C.accent2, "#ff9f43", "#00d2d3", "#54a0ff"];
+
+const CAT_META = {
+  sports:     { label:"Sports",      icon:"🏆" },
+  science:    { label:"Science",     icon:"🔬" },
+  history:    { label:"History",     icon:"📜" },
+  popculture: { label:"Pop Culture", icon:"🎬" },
+  geography:  { label:"Geography",   icon:"🌍" },
+  music:      { label:"Music",       icon:"🎵" },
+  movies:     { label:"Movies",      icon:"🎥" },
+};
 
 const MOCK_PLAYERS = [
   { id: "p1", name: "You", color: PLAYER_COLORS[0], isMe: true },
@@ -81,6 +89,7 @@ const css = `
   @keyframes scoreUp  { 0%{opacity:0;transform:translateY(0)} 60%{opacity:1;transform:translateY(-28px)} 100%{opacity:0;transform:translateY(-48px)} }
   @keyframes reveal   { from{opacity:0;transform:scale(0.8) rotateY(90deg)} to{opacity:1;transform:scale(1) rotateY(0deg)} }
   @keyframes confetti { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(120px) rotate(720deg);opacity:0} }
+  @keyframes fxDrop   { 0%{transform:translateY(-40px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(540deg);opacity:0} }
   button { font-family:'Nunito',sans-serif; cursor:pointer; transition:transform 0.12s,box-shadow 0.12s; }
   button:not(:disabled):hover  { transform:scale(1.03) !important; }
   button:not(:disabled):active { transform:scale(0.96) !important; }
@@ -122,6 +131,23 @@ function Card({ children, style={} }) {
   );
 }
 
+function PlayerAvatar({ name, color, avatar, size = 32, radius = "50%", fontSize }) {
+  const fs = fontSize || Math.max(10, Math.round(size * 0.43));
+  const isImg = avatar?.startsWith?.("http") || avatar?.startsWith?.("blob:");
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: radius, flexShrink: 0,
+      background: color, display:"flex", alignItems:"center", justifyContent:"center",
+      fontSize: fs, fontWeight:900, color:"#fff", overflow:"hidden",
+    }}>
+      {isImg
+        ? <img src={avatar} alt={name?.[0]} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+        : (avatar || name?.[0])
+      }
+    </div>
+  );
+}
+
 function ScorePill({ player, showDelta, delta }) {
   return (
     <div style={{
@@ -129,11 +155,7 @@ function ScorePill({ player, showDelta, delta }) {
       background: player.color+"18", border:`1px solid ${player.color}44`,
       borderRadius:24, padding:"5px 12px", position:"relative",
     }}>
-      <div style={{
-        width:26, height:26, borderRadius:"50%", background:player.color,
-        display:"flex", alignItems:"center", justifyContent:"center",
-        fontSize:12, fontWeight:900, color:"#fff", fontFamily:"'Nunito',sans-serif",
-      }}>{player.name[0]}</div>
+      <PlayerAvatar name={player.name} color={player.color} avatar={player.avatar} size={26} />
       <span style={{ color:C.text, fontWeight:800, fontSize:13, fontFamily:"'Nunito',sans-serif" }}>
         {player.name}
       </span>
@@ -158,14 +180,16 @@ function ScorePill({ player, showDelta, delta }) {
   );
 }
 
-function BlindBetScreen({ players, myPlayer, round, totalRounds, timerSecs, onConfirm }) {
+function BlindBetScreen({ players, myPlayer, round, totalRounds, timerSecs, category, onConfirm }) {
   const [betType, setBetType]   = useState(null);
   const [betAmt, setBetAmt]     = useState("");
   const [targetId, setTargetId] = useState(null);
   const [timeLeft, setTimeLeft] = useState(timerSecs);
-  const betTypeRef  = useRef(null);
-  const betAmtRef   = useRef("");
-  const targetIdRef = useRef(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const betTypeRef   = useRef(null);
+  const betAmtRef    = useRef("");
+  const targetIdRef  = useRef(null);
+  const confirmedRef = useRef(false);
   betTypeRef.current  = betType;
   betAmtRef.current   = betAmt;
   targetIdRef.current = targetId;
@@ -184,16 +208,20 @@ function BlindBetScreen({ players, myPlayer, round, totalRounds, timerSecs, onCo
       setTimeLeft(t => {
         if (t <= 1) {
           clearInterval(id);
-          const bt  = betTypeRef.current;
-          const amt = parseInt(betAmtRef.current) || 0;
-          const tid = targetIdRef.current;
-          const ok  = (bt==="none") || (bt==="allin" && !myPlayer.allInUsed) ||
-                      (bt==="self" && amt>=5 && amt<=myPlayer.points) ||
-                      (bt==="other" && amt>=5 && amt<=myPlayer.points && tid);
-          onConfirm(ok
-            ? { type:bt, amount:bt==="allin"||bt==="none" ? myPlayer.points : amt, targetId:tid }
-            : { type:"none", amount:0, targetId:null }
-          );
+          if (!confirmedRef.current) {
+            confirmedRef.current = true;
+            setConfirmed(true);
+            const bt  = betTypeRef.current;
+            const amt = parseInt(betAmtRef.current) || 0;
+            const tid = targetIdRef.current;
+            const ok  = (bt==="none") || (bt==="allin" && !myPlayer.allInUsed) ||
+                        (bt==="self" && amt>=5 && amt<=myPlayer.points) ||
+                        (bt==="other" && amt>=5 && amt<=myPlayer.points && tid);
+            onConfirm(ok
+              ? { type:bt, amount:bt==="allin"||bt==="none" ? myPlayer.points : amt, targetId:tid }
+              : { type:"none", amount:0, targetId:null }
+            );
+          }
           return 0;
         }
         return t - 1;
@@ -202,7 +230,15 @@ function BlindBetScreen({ players, myPlayer, round, totalRounds, timerSecs, onCo
     return () => clearInterval(id);
   }, []);
 
+  const handleConfirm = (bet) => {
+    if (confirmedRef.current) return;
+    confirmedRef.current = true;
+    setConfirmed(true);
+    onConfirm(bet);
+  };
+
   const timerColor = timeLeft > timerSecs * 0.5 ? C.accent3 : timeLeft > timerSecs * 0.25 ? C.accent2 : C.accent1;
+  const catMeta = category ? (CAT_META[category] || { label: category, icon: "❓" }) : null;
 
   const typeCards = [
     { id:"self",  icon:"🎯", label:"Bet on Yourself",   desc:"Wager on your own answer", color:C.accent4 },
@@ -210,6 +246,46 @@ function BlindBetScreen({ players, myPlayer, round, totalRounds, timerSecs, onCo
     { id:"none",  icon:"💸", label:"No Bet",            desc:"+50 pts if you're correct", color:C.accent3 },
     { id:"allin", icon:"🎰", label:"All-In Token",      desc: myPlayer.allInUsed ? "Already used this game" : "One use per game · 2× if right · free if wrong", color:C.accent2, disabled: myPlayer.allInUsed },
   ];
+
+  if (confirmed) {
+    const allBet = players.every(p => p.hasBet || p.isMe);
+    return (
+      <div style={{ display:"flex", flexDirection:"column", gap:16, animation:"fadeUp 0.3s ease" }}>
+        <div style={{ textAlign:"center" }}>
+          <div style={{ fontSize:44, marginBottom:6, animation:"float 2s ease-in-out infinite" }}>✅</div>
+          <h2 style={{ margin:0, fontFamily:"'Boogaloo',cursive", fontSize:26, color:C.accent3 }}>Bet Locked In!</h2>
+          <p style={{ color:C.muted, fontSize:13, marginTop:4 }}>Waiting for all players to place their bets…</p>
+        </div>
+        <div>
+          <div style={{ color:C.muted, fontSize:10, fontWeight:800, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Betting Status</div>
+          {players.map(p => (
+            <div key={p.id} style={{
+              display:"flex", alignItems:"center", justifyContent:"space-between",
+              background:"#13121f", border:`1px solid ${C.cardBorder}`,
+              borderRadius:10, padding:"8px 14px", marginBottom:6,
+            }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={24} />
+                <span style={{ color:C.text, fontWeight:700, fontSize:13 }}>{p.name}{p.isMe ? " (you)" : ""}</span>
+              </div>
+              <span style={{ fontSize:12, fontWeight:800, color: p.hasBet || p.isMe ? C.accent3 : C.muted }}>
+                {p.hasBet || p.isMe ? "✓ Ready" : "⏳ Betting…"}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+            <span style={{ color:C.muted, fontSize:11, fontWeight:800, letterSpacing:1, textTransform:"uppercase" }}>Time remaining</span>
+            <span style={{ fontFamily:"'Boogaloo',cursive", fontSize:18, color: timeLeft <= 10 ? C.accent1 : C.muted }}>⏱ {timeLeft}s</span>
+          </div>
+          <div style={{ height:4, background:"#13121f", borderRadius:2, overflow:"hidden" }}>
+            <div style={{ height:"100%", background: timeLeft <= 10 ? C.accent1 : C.accent4, borderRadius:2, width:`${(timeLeft/timerSecs)*100}%`, transition:"width 1s linear" }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:20, animation:"fadeUp 0.4s ease" }}>
@@ -230,6 +306,11 @@ function BlindBetScreen({ players, myPlayer, round, totalRounds, timerSecs, onCo
         <div style={{ color:C.muted, fontSize:12, fontWeight:800, letterSpacing:2, textTransform:"uppercase", marginBottom:4 }}>
           Round {round} of {totalRounds}
         </div>
+        {catMeta && (
+          <div style={{ display:"inline-flex", alignItems:"center", gap:6, background:C.accent4+"18", border:`1px solid ${C.accent4}44`, borderRadius:20, padding:"3px 12px", marginBottom:6, fontSize:12, color:C.accent4, fontWeight:800 }}>
+            {catMeta.icon} {catMeta.label}
+          </div>
+        )}
         <h2 style={{ margin:0, fontFamily:"'Boogaloo',cursive", fontSize:30, color:C.text }}>
           🎲 Place Your Bet
         </h2>
@@ -351,7 +432,7 @@ function BlindBetScreen({ players, myPlayer, round, totalRounds, timerSecs, onCo
       <Btn
         color={C.accent1}
         disabled={!canConfirm}
-        onClick={() => onConfirm({ type:betType, amount:betType==="allin"||betType==="none" ? myPlayer.points : amtNum, targetId })}
+        onClick={() => handleConfirm({ type:betType, amount:betType==="allin"||betType==="none" ? myPlayer.points : amtNum, targetId })}
       >
         {canConfirm ? "Lock In Bet →" : "Select a bet to continue"}
       </Btn>
@@ -418,8 +499,15 @@ function QuestionScreen({ question, players, myPlayer, myBet: myBetProp, timerSe
         background:"#13121f", borderRadius:18, padding:"20px 22px",
         border:`1px solid ${C.cardBorder}`,
       }}>
-        <div style={{ color:C.muted, fontSize:11, fontWeight:800, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>
-          Question
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+          <div style={{ color:C.muted, fontSize:11, fontWeight:800, letterSpacing:1.5, textTransform:"uppercase" }}>
+            Question
+          </div>
+          {question.cat && CAT_META[question.cat] && (
+            <div style={{ display:"inline-flex", alignItems:"center", gap:5, background:C.accent4+"18", border:`1px solid ${C.accent4}44`, borderRadius:20, padding:"2px 10px", fontSize:11, color:C.accent4, fontWeight:800 }}>
+              {CAT_META[question.cat].icon} {CAT_META[question.cat].label}
+            </div>
+          )}
         </div>
         <div style={{ color:C.text, fontWeight:800, fontSize:18, lineHeight:1.4, fontFamily:"'Nunito',sans-serif" }}>
           {question.q}
@@ -548,14 +636,21 @@ function QuestionScreen({ question, players, myPlayer, myBet: myBetProp, timerSe
   );
 }
 
-function RevealScreen({ question, players, round, totalRounds, onNext }) {
+function RevealScreen({ question, players, round, totalRounds }) {
   const [step, setStep] = useState(0);
+  const [showFX, setShowFX] = useState(false);
+  const myResult = players.find(p => p.isMe);
+  const iGotItRight = myResult?.correct === true;
 
   useEffect(() => {
     const timers = [
       setTimeout(() => setStep(1), 1200),
       setTimeout(() => setStep(2), 2400),
     ];
+    if (iGotItRight) {
+      timers.push(setTimeout(() => setShowFX(true),  800));
+      timers.push(setTimeout(() => setShowFX(false), 3800));
+    }
     return () => timers.forEach(clearTimeout);
   }, []);
 
@@ -563,6 +658,7 @@ function RevealScreen({ question, players, round, totalRounds, onNext }) {
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:18, animation:"fadeUp 0.4s ease" }}>
+      {showFX && <VictoryFX />}
       <div style={{ textAlign:"center" }}>
         <div style={{ color:C.muted, fontSize:12, fontWeight:800, letterSpacing:2, textTransform:"uppercase" }}>
           Round {round} of {totalRounds} — Reveal
@@ -621,11 +717,7 @@ function RevealScreen({ question, players, round, totalRounds, onNext }) {
                 animation:"fadeUp 0.3s ease",
               }}>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <div style={{
-                    width:30, height:30, borderRadius:"50%", background:p.color,
-                    display:"flex", alignItems:"center", justifyContent:"center",
-                    fontSize:13, fontWeight:900, color:"#fff",
-                  }}>{p.name[0]}</div>
+                  <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={30} />
                   <div>
                     <div style={{ color:C.text, fontWeight:800, fontSize:14 }}>{p.name}</div>
                     <div style={{ color:C.muted, fontSize:11 }}>
@@ -666,9 +758,9 @@ function RevealScreen({ question, players, round, totalRounds, onNext }) {
       )}
 
       {step >= 2 && (
-        <Btn color={C.accent1} onClick={onNext} style={{ marginTop:4 }}>
-          {round >= totalRounds ? "🏆 See Final Results →" : `Next Round →`}
-        </Btn>
+        <div style={{ textAlign:"center", color:C.muted, fontSize:13, fontWeight:700, animation:"fadeUp 0.3s ease", padding:"8px 0" }}>
+          {round >= totalRounds ? "⏳ Calculating final results…" : "⏳ Next round starting soon…"}
+        </div>
       )}
     </div>
   );
@@ -717,11 +809,7 @@ function EndScreen({ players, onPlayAgain, onExit }) {
                 fontFamily:"'Boogaloo',cursive", fontSize:22,
                 color:["🥇","🥈","🥉"][i] ? C.accent2 : C.muted, width:28,
               }}>{["🥇","🥈","🥉"][i] || `#${i+1}`}</div>
-              <div style={{
-                width:32, height:32, borderRadius:"50%", background:p.color,
-                display:"flex", alignItems:"center", justifyContent:"center",
-                fontSize:14, fontWeight:900, color:"#fff",
-              }}>{p.name[0]}</div>
+              <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={32} />
               <div>
                 <div style={{ color:C.text, fontWeight:800, fontSize:15 }}>{p.name}</div>
                 <div style={{ color:C.muted, fontSize:11 }}>
@@ -764,53 +852,23 @@ function EndScreen({ players, onPlayAgain, onExit }) {
   );
 }
 
-const VOTE_CATS = [
-  { id:"science",    icon:"🔬", label:"Science"     },
-  { id:"history",    icon:"📜", label:"History"     },
-  { id:"sports",     icon:"🏆", label:"Sports"      },
-  { id:"popculture", icon:"🎬", label:"Pop Culture" },
-  { id:"geography",  icon:"🌍", label:"Geography"   },
-  { id:"music",      icon:"🎵", label:"Music"       },
-];
-
-function CategoryVoteScreen({ round, totalRounds, timerSecs, players, onDone, onVote }) {
+function CategoryVoteScreen({ options, voteCounts, round, totalRounds, timerSecs, onVote }) {
   const [myVote,   setMyVote]   = useState(null);
-  const [votes,    setVotes]    = useState({});
   const [timeLeft, setTimeLeft] = useState(timerSecs);
-  const doneRef = useRef(false);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      const mock = {};
-      VOTE_CATS.forEach(c => { mock[c.id] = Math.floor(Math.random() * players.length); });
-      setVotes(mock);
-    }, 800);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) {
-          clearInterval(id);
-          if (!doneRef.current) { doneRef.current = true; onDone(); }
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
+    const id = setInterval(() => setTimeLeft(t => Math.max(0, t - 1)), 1000);
     return () => clearInterval(id);
   }, []);
 
   const handleVote = (catId) => {
     if (myVote) return;
     setMyVote(catId);
-    setVotes(v => ({ ...v, [catId]: (v[catId] || 0) + 1 }));
     onVote && onVote(catId);
   };
 
-  const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
-  const topCat = Object.entries(votes).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const totalVotes = Object.values(voteCounts).reduce((a, b) => a + b, 0);
+  const topCat = Object.entries(voteCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
   const timerColor = timeLeft > 5 ? C.accent4 : timeLeft > 2 ? C.accent2 : C.accent1;
 
   return (
@@ -838,55 +896,91 @@ function CategoryVoteScreen({ round, totalRounds, timerSecs, players, onDone, on
         </div>
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-        {VOTE_CATS.map(c => {
-          const voteCount = votes[c.id] || 0;
-          const pct = totalVotes ? Math.round((voteCount / totalVotes) * 100) : 0;
-          const isTop = c.id === topCat && totalVotes > 0;
-          const isMyVote = myVote === c.id;
-          return (
-            <button
-              key={c.id}
-              disabled={!!myVote}
-              onClick={() => handleVote(c.id)}
-              style={{
-                background: isMyVote ? C.accent4+"22" : isTop ? C.accent2+"11" : "#13121f",
-                border:`2px solid ${isMyVote ? C.accent4 : isTop ? C.accent2+"88" : C.cardBorder}`,
-                borderRadius:14, padding:"12px 14px", textAlign:"left",
-                cursor: myVote ? "default" : "pointer",
-                transition:"all 0.15s", position:"relative", overflow:"hidden",
-              }}
-            >
-              {myVote && totalVotes > 0 && (
-                <div style={{
-                  position:"absolute", left:0, top:0, bottom:0,
-                  width:`${pct}%`, background: isMyVote ? C.accent4+"22" : "#ffffff06",
-                  transition:"width 0.6s ease", pointerEvents:"none",
-                }} />
-              )}
-              <div style={{ position:"relative", zIndex:1 }}>
-                <div style={{ fontSize:20, marginBottom:2 }}>{c.icon}</div>
-                <div style={{ color: isMyVote ? C.accent4 : isTop && myVote ? C.accent2 : C.text, fontWeight:800, fontSize:13 }}>{c.label}</div>
-                {myVote && (
-                  <div style={{ color:C.muted, fontSize:11, marginTop:2 }}>
-                    {voteCount} vote{voteCount !== 1 ? "s" : ""} · {pct}%
-                    {isTop && " 🏆"}
-                  </div>
+      {options.length > 0 ? (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+          {options.map(opt => {
+            const meta = CAT_META[opt.id] || { label: opt.label, icon:"❓" };
+            const voteCount = voteCounts[opt.id] || 0;
+            const pct = totalVotes ? Math.round((voteCount / totalVotes) * 100) : 0;
+            const isTop = opt.id === topCat && totalVotes > 0;
+            const isMyVote = myVote === opt.id;
+            return (
+              <button
+                key={opt.id}
+                disabled={!!myVote}
+                onClick={() => handleVote(opt.id)}
+                style={{
+                  background: isMyVote ? C.accent4+"22" : isTop ? C.accent2+"11" : "#13121f",
+                  border:`2px solid ${isMyVote ? C.accent4 : isTop ? C.accent2+"88" : C.cardBorder}`,
+                  borderRadius:14, padding:"12px 14px", textAlign:"left",
+                  cursor: myVote ? "default" : "pointer",
+                  transition:"all 0.15s", position:"relative", overflow:"hidden",
+                }}
+              >
+                {myVote && totalVotes > 0 && (
+                  <div style={{
+                    position:"absolute", left:0, top:0, bottom:0,
+                    width:`${pct}%`, background: isMyVote ? C.accent4+"22" : "#ffffff06",
+                    transition:"width 0.6s ease", pointerEvents:"none",
+                  }} />
                 )}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+                <div style={{ position:"relative", zIndex:1 }}>
+                  <div style={{ fontSize:20, marginBottom:2 }}>{meta.icon}</div>
+                  <div style={{ color: isMyVote ? C.accent4 : isTop && myVote ? C.accent2 : C.text, fontWeight:800, fontSize:13 }}>{meta.label}</div>
+                  {myVote && (
+                    <div style={{ color:C.muted, fontSize:11, marginTop:2 }}>
+                      {voteCount} vote{voteCount !== 1 ? "s" : ""} · {pct}%
+                      {isTop && " 🏆"}
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ textAlign:"center", color:C.muted, padding:20 }}>Loading categories…</div>
+      )}
 
-      <Btn
-        color={C.accent3}
-        onClick={() => { if (!doneRef.current) { doneRef.current = true; onDone(); } }}
-      >
-        {myVote
-          ? `▶ Continue with ${VOTE_CATS.find(c => c.id === topCat)?.label ?? "next"} →`
-          : "Skip vote →"}
-      </Btn>
+      {myVote && (
+        <div style={{ textAlign:"center", color:C.muted, fontSize:13, fontWeight:700, animation:"fadeUp 0.3s ease" }}>
+          ✓ Vote cast! Starting next round soon…
+        </div>
+      )}
+    </div>
+  );
+}
+
+const FX_CONFIG = {
+  fx_confetti:  { items: ["🟥","🟨","🟩","🟦","🟪","🟧"], count: 28 },
+  fx_money:     { items: ["💵","💰","💸"],                  count: 20 },
+  fx_fireworks: { items: ["✨","🎆","🌟","💥"],             count: 22 },
+  fx_lightning: { items: ["⚡","🔥","💫"],                  count: 20 },
+  fx_galaxy:    { items: ["🌟","⭐","💫","🌠","✨"],        count: 26 },
+};
+
+function VictoryFX() {
+  const fxId = localStorage.getItem("bk_equipped_fx") || "fx_confetti";
+  const cfg   = FX_CONFIG[fxId] || FX_CONFIG.fx_confetti;
+  const particles = useMemo(() =>
+    Array.from({ length: cfg.count }, (_, i) => ({
+      id:    i,
+      left:  `${3 + (i * 3.5 + i * i * 0.3) % 94}%`,
+      delay: `${((i * 0.06) % 0.8).toFixed(2)}s`,
+      dur:   `${1.2 + (i % 4) * 0.25}s`,
+      emoji: cfg.items[i % cfg.items.length],
+      size:  16 + (i % 3) * 6,
+    })), []);
+
+  return (
+    <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:200, overflow:"hidden" }}>
+      {particles.map(p => (
+        <div key={p.id} style={{
+          position:"absolute", left:p.left, top:"-40px",
+          fontSize:p.size,
+          animation:`fxDrop ${p.dur} ${p.delay} ease forwards`,
+        }}>{p.emoji}</div>
+      ))}
     </div>
   );
 }
@@ -905,6 +999,8 @@ export default function GameFlow({ onExit }) {
   const [betLocked,   setBetLocked]   = useState(false);
   const [answered,    setAnswered]    = useState(false);
   const [voteOpts,    setVoteOpts]    = useState([]);
+  const [voteCounts,  setVoteCounts]  = useState({});
+  const [category,    setCategory]    = useState(null);
   const [roomCode,    setRoomCode]    = useState("");
   const [isHost,      setIsHost]      = useState(false);
   const [err,         setErr]         = useState(null);
@@ -943,10 +1039,16 @@ export default function GameFlow({ onExit }) {
     on("playerJoined", ({ state }) => setPlayers(mapPlayers(state.players)));
     on("playerLeft",   ({ state }) => setPlayers(mapPlayers(state.players)));
 
-    on("roundStart", ({ round, total, betTimer, state }) => {
+    on("roomState", ({ players: sp }) => {
+      if (sp) setPlayers(mapPlayers(sp));
+    });
+
+    on("roundStart", ({ round, total, betTimer, state, category: cat }) => {
       setRound(round);
       setTotalRounds(total);
-      setBetTimerSecs(betTimer || 15);
+      setBetTimerSecs(betTimer || 60);
+      setCategory(cat || null);
+      setVoteCounts({});
       setMyBet(null);
       setBetLocked(false);
       setAnswered(false);
@@ -976,14 +1078,14 @@ export default function GameFlow({ onExit }) {
     });
 
     on("categoryVote", ({ options, timer }) => {
-      const icons = { Sports:"🏆", Science:"🔬", History:"📜", "Pop Culture":"🎬", Geography:"🌍", Music:"🎵", Movies:"🎥", Technology:"💻", Food:"🍔", Art:"🎨" };
-      setVoteOpts((options || []).map((label, i) => ({ id: String(i), icon: icons[label] || "❓", label })));
+      setVoteOpts(options || []);
+      setVoteCounts({});
       setVoteTimerSecs(timer || 10);
       setPhase("categoryvote");
     });
 
-    on("voteUpdate", ({ totalVotes, totalPlayers }) => {
-      if (totalVotes >= totalPlayers) setPhase("blindbet");
+    on("voteUpdate", ({ counts }) => {
+      setVoteCounts(counts || {});
     });
 
     on("gameEnd", ({ stats, state }) => {
@@ -994,7 +1096,7 @@ export default function GameFlow({ onExit }) {
     on("error", (msg) => setErr(String(msg)));
 
     return () => {
-      ["roomCreated","roomJoined","playerJoined","playerLeft",
+      ["roomCreated","roomJoined","playerJoined","playerLeft","roomState",
        "roundStart","questionReveal","roundReveal","categoryVote","voteUpdate","gameEnd","error"]
         .forEach(e => socket.off(e));
     };
@@ -1012,14 +1114,8 @@ export default function GameFlow({ onExit }) {
     getSocket().emit("submitAnswer", { answerIdx: answer, doubleDown });
   }
 
-  function handleVoteDone(categoryIndex) {
-    getSocket().emit("voteCategory", { categoryIndex: Number(categoryIndex) });
-  }
-
-  function handleNext() {
-    // Server auto-advances; this is just UI — advance locally if reveal lingers
-    if (round >= totalRounds) setPhase("end");
-    else setPhase("categoryvote");
+  function handleVoteSubmit(categoryId) {
+    getSocket().emit("voteCategory", { categoryId });
   }
 
   function handlePlayAgain() { onExit(); }
@@ -1071,12 +1167,7 @@ export default function GameFlow({ onExit }) {
                 border:`1px solid ${p.isMe ? p.color+"55" : "#ffffff0a"}`,
               }}>
                 <div style={{ fontSize:9, color:C.muted, fontWeight:800 }}>#{rank+1}</div>
-                <div style={{
-                  width:40, height:40, borderRadius:10,
-                  background:p.color, display:"flex", alignItems:"center", justifyContent:"center",
-                  fontSize:17, fontWeight:900, color:"#fff",
-                  boxShadow:`0 0 10px ${p.color}44`,
-                }}>{p.name[0]}</div>
+                <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={40} radius="10px" fontSize={17} />
                 <div style={{ fontSize:10, fontWeight:800, color: p.isMe ? C.text : C.muted, textAlign:"center", lineHeight:1.2 }}>
                   {p.name}
                 </div>
@@ -1122,9 +1213,7 @@ export default function GameFlow({ onExit }) {
                       border:`1px solid ${p.isMe ? p.color+"55" : C.cardBorder}`,
                       borderRadius:12, padding:"10px 14px",
                     }}>
-                      <div style={{ width:32, height:32, borderRadius:"50%", background:p.color, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900, color:"#fff", fontSize:14 }}>
-                        {p.name[0]}
-                      </div>
+                      <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={32} />
                       <span style={{ fontWeight:800, color:C.text, fontSize:14 }}>{p.name}</span>
                       {p.isHost && <span style={{ marginLeft:"auto", fontSize:11, color:C.accent2, fontWeight:800 }}>HOST</span>}
                       {p.isMe  && <span style={{ marginLeft: p.isHost ? 4 : "auto", fontSize:11, color:C.accent4, fontWeight:800 }}>YOU</span>}
@@ -1161,6 +1250,7 @@ export default function GameFlow({ onExit }) {
                 round={round}
                 totalRounds={totalRounds}
                 timerSecs={betTimerSecs}
+                category={category}
                 onConfirm={handleBetConfirm}
               />
             )}
@@ -1180,17 +1270,16 @@ export default function GameFlow({ onExit }) {
                 players={players}
                 round={round}
                 totalRounds={totalRounds}
-                onNext={handleNext}
               />
             )}
             {phase === "categoryvote" && (
               <CategoryVoteScreen
+                options={voteOpts}
+                voteCounts={voteCounts}
                 round={round}
                 totalRounds={totalRounds}
                 timerSecs={voteTimerSecs}
-                players={players}
-                onDone={handleVoteDone}
-                onVote={handleVoteDone}
+                onVote={handleVoteSubmit}
               />
             )}
             {phase === "end" && (

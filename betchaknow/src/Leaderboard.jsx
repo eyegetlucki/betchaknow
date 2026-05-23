@@ -18,19 +18,6 @@ const C = {
   muted2:  "#3d3b5c",
 };
 
-const ME = {
-  username:    "BluffMaster99",
-  avatar:      "🎯",
-  country:     "USA",
-  countryFlag: "🇺🇸",
-  state:       "California",
-  score:       12480,
-  globalRank:  47,
-  nationalRank:18,
-  stateRank:   6,
-  level:       42,
-};
-
 const SEASON = {
   number:    "I",
   name:      "Origins",
@@ -39,22 +26,38 @@ const SEASON = {
   daysLeft:  8,
 };
 
-const FIRST = ["Trivia","Bluff","Quiz","Bet","Smart","Wild","Speed","Sharp","Fast","Lucky","Cosmic","Brain","Code","Storm","Iron","Silver","Golden","Diamond","Pixel","Nova","Echo","Zen","Mystic","Rogue","Cyber"];
-const LAST  = ["King","Master","Queen","Wizard","Ace","Ninja","Lord","Champ","Hunter","Phoenix","Dragon","Wolf","Tiger","Shark","Hawk","Bear","Fox","Cat","Spider","Eagle"];
-const COUNTRIES = [
-  { flag:"🇺🇸", name:"USA"       }, { flag:"🇬🇧", name:"UK"         },
-  { flag:"🇨🇦", name:"Canada"    }, { flag:"🇩🇪", name:"Germany"    },
-  { flag:"🇯🇵", name:"Japan"     }, { flag:"🇫🇷", name:"France"     },
-  { flag:"🇦🇺", name:"Australia" }, { flag:"🇧🇷", name:"Brazil"     },
-  { flag:"🇰🇷", name:"S. Korea"  }, { flag:"🇲🇽", name:"Mexico"     },
-  { flag:"🇮🇳", name:"India"     }, { flag:"🇮🇹", name:"Italy"      },
-  { flag:"🇪🇸", name:"Spain"     }, { flag:"🇳🇱", name:"Netherlands"}, { flag:"🇸🇪", name:"Sweden" },
-];
-const STATES = ["California","Texas","Florida","New York","Illinois","Pennsylvania","Ohio","Georgia","North Carolina","Michigan","Virginia","Washington","Arizona","Massachusetts","Tennessee"];
+const ISO_NAMES = {
+  US:"United States", GB:"United Kingdom", CA:"Canada",  DE:"Germany",
+  JP:"Japan",         FR:"France",         AU:"Australia",BR:"Brazil",
+  KR:"South Korea",   MX:"Mexico",         IN:"India",    IT:"Italy",
+  ES:"Spain",         NL:"Netherlands",    SE:"Sweden",   NG:"Nigeria",
+  ZA:"South Africa",  AR:"Argentina",      PL:"Poland",   PT:"Portugal",
+  RU:"Russia",        TR:"Turkey",         SA:"Saudi Arabia", AE:"UAE",
+  SG:"Singapore",     PH:"Philippines",    ID:"Indonesia",MY:"Malaysia",
+  TH:"Thailand",      VN:"Vietnam",        EG:"Egypt",    PK:"Pakistan",
+};
 
-function countryObj(name) {
-  if (!name) return { flag: "🌐", name: "Unknown" };
-  return COUNTRIES.find(c => c.name === name) || { flag: "🌐", name };
+function isoToFlag(code) {
+  if (!code || code.length !== 2) return "🌐";
+  try {
+    return String.fromCodePoint(
+      0x1F1E0 + code.toUpperCase().charCodeAt(0) - 65,
+      0x1F1E0 + code.toUpperCase().charCodeAt(1) - 65,
+    );
+  } catch { return "🌐"; }
+}
+
+function countryObj(stored) {
+  if (!stored || stored === "Unknown") return { flag:"🌐", name:"Unknown" };
+  if (stored.length === 2) {
+    const upper = stored.toUpperCase();
+    return { flag: isoToFlag(upper), name: ISO_NAMES[upper] || upper };
+  }
+  // Legacy full name — reverse lookup
+  const entry = Object.entries(ISO_NAMES).find(([, n]) => n === stored);
+  return entry
+    ? { flag: isoToFlag(entry[0]), name: stored }
+    : { flag: "🌐", name: stored };
 }
 
 function mapServerList(players) {
@@ -73,56 +76,6 @@ function mapServerList(players) {
     isVIP:    p.is_vip || false,
   }));
 }
-const AVATARS = ["🎯","🃏","🦈","👑","💎","🎰","🔥","⚡","🌟","🚀","🎭","🦅","🐉","🦁","🐺","🦊","🎪","💫","🌈","🎲","🎮","♠","♥","♦","♣"];
-
-function seeded(i, max) {
-  return Math.floor((Math.sin(i * 9999.31) * 100000) % max + max) % max;
-}
-
-function generatePlayers(count, isFriends = false) {
-  const players = [];
-  for (let i = 0; i < count; i++) {
-    const isMe = isFriends ? false : i === ME.globalRank - 1;
-    const country = isMe ? { flag:ME.countryFlag, name:ME.country } : COUNTRIES[seeded(i+1, COUNTRIES.length)];
-    players.push({
-      rank: i + 1,
-      username: isMe ? ME.username : FIRST[seeded(i+13, FIRST.length)] + LAST[seeded(i+71, LAST.length)] + (10 + seeded(i+5, 90)),
-      avatar:   isMe ? ME.avatar : AVATARS[seeded(i+3, AVATARS.length)],
-      country,
-      state:    isMe ? ME.state : STATES[seeded(i+29, STATES.length)],
-      score:    Math.floor(20000 - (i * 75) - seeded(i+11, 60)),
-      level:    isMe ? ME.level : Math.floor(80 - i*0.4 + seeded(i+17, 8) - 4),
-      change:   ((seeded(i+91, 20) - 10)),
-      isMe,
-      isFriend: isFriends || seeded(i+47, 10) < 1,
-      isVIP:    seeded(i+19, 10) < 3,
-    });
-  }
-  return players;
-}
-
-const GLOBAL_TOP   = generatePlayers(100);
-GLOBAL_TOP[ME.globalRank - 1] = { ...GLOBAL_TOP[ME.globalRank - 1], isMe:true, username:ME.username, avatar:ME.avatar, score:ME.score };
-
-const NATIONAL_TOP = GLOBAL_TOP
-  .filter(p => p.country.name === ME.country || p.isMe)
-  .slice(0, 100)
-  .map((p, i) => ({ ...p, rank: i + 1 }));
-
-const STATE_TOP = NATIONAL_TOP
-  .filter((p, i) => p.state === ME.state || p.isMe || i < 30)
-  .slice(0, 100)
-  .map((p, i) => ({ ...p, rank: i + 1 }));
-
-const FRIENDS_TOP = generatePlayers(12, true);
-FRIENDS_TOP.splice(seeded(99, 5), 0, {
-  rank: seeded(99, 5) + 1, username: ME.username, avatar: ME.avatar,
-  country: { flag: ME.countryFlag, name: ME.country },
-  state: ME.state, score: ME.score, level: ME.level,
-  change: 3, isMe:true, isFriend:true, isVIP: false,
-});
-FRIENDS_TOP.forEach((p,i) => p.rank = i+1);
-FRIENDS_TOP.sort((a,b) => b.score - a.score).forEach((p,i) => p.rank = i+1);
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -172,6 +125,13 @@ const css = `
 
   button:not(:disabled):active { transform:scale(0.97); }
 `;
+
+function Avatar({ src, size = 36, radius = 10 }) {
+  const isImg = src?.startsWith?.("http") || src?.startsWith?.("blob:");
+  return isImg
+    ? <img src={src} alt="" style={{ width:size, height:size, borderRadius:radius, objectFit:"cover", display:"block" }} />
+    : <span style={{ fontSize: Math.round(size * 0.55), lineHeight:1 }}>{src || "🎯"}</span>;
+}
 
 function Medal({ rank }) {
   const medals = {
@@ -280,7 +240,7 @@ function Podium({ top3 }) {
               animationDelay:`${idx * 0.3}s`,
               position:"relative",
             }}>
-              {p.avatar}
+              <Avatar src={p.avatar} size={place === 1 ? 40 : 32} radius="50%" />
               {p.isVIP && <div style={{ position:"absolute", top:-4, right:-4, fontSize:18 }}>👑</div>}
             </div>
 
@@ -341,7 +301,7 @@ function PlayerRow({ player, showLocation = "country" }) {
           border:`1.5px solid ${player.isMe ? C.a4 : C.border2}`,
           display:"flex", alignItems:"center", justifyContent:"center",
           fontSize:18, boxShadow: player.isMe ? `0 0 12px ${C.a4}44` : "none",
-        }}>{player.avatar}</div>
+        }}><Avatar src={player.avatar} size={28} radius={8} /></div>
 
         <div style={{ minWidth:0, flex:1 }}>
           <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
@@ -380,11 +340,13 @@ function PlayerRow({ player, showLocation = "country" }) {
   );
 }
 
-function MyRankCard({ me = ME }) {
+function MyRankCard({ me, loading }) {
+  const displayName  = me?.username || getUsername() || "—";
+  const displayScore = me?.score ?? 0;
   const stats = [
-    { icon:"🌍", label:"Global",   rank: me.globalRank,   accent: C.a4, max: 100 },
-    { icon:"🇺🇸", label:"National", rank: me.nationalRank, accent: C.a5, max: 100 },
-    { icon:"📍", label:"State",    rank: me.stateRank,    accent: C.a3, max: 100 },
+    { icon:"🌍", label:"Global",   rank: me?.globalRank,   accent: C.a4, max: 100 },
+    { icon:"🌐", label:"National", rank: me?.nationalRank, accent: C.a5, max: 100 },
+    { icon:"📍", label:"State",    rank: me?.stateRank,    accent: C.a3, max: 100 },
   ];
 
   return (
@@ -407,15 +369,15 @@ function MyRankCard({ me = ME }) {
               background:`linear-gradient(135deg, ${C.a4}, ${C.a5})`,
               display:"flex", alignItems:"center", justifyContent:"center",
               fontSize:22, boxShadow:`0 0 16px ${C.a4}44`,
-            }}>{me.avatar}</div>
+            }}><Avatar src={me?.avatar || "🎯"} size={30} radius={8} /></div>
             <div>
               <div style={{ fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.8, textTransform:"uppercase" }}>Your Position</div>
-              <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:20, color:C.text }}>{me.username}</div>
+              <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:20, color:C.text }}>{displayName}</div>
             </div>
           </div>
           <div style={{ textAlign:"right" }}>
             <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:30, color:C.a2, lineHeight:1 }}>
-              {me.score.toLocaleString()}
+              {loading ? "—" : displayScore.toLocaleString()}
             </div>
             <div style={{ fontSize:10, color:C.muted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Season Points</div>
           </div>
@@ -433,7 +395,7 @@ function MyRankCard({ me = ME }) {
                 <span style={{ fontSize:18 }}>{s.icon}</span>
                 <div>
                   <div style={{ fontSize:10, color:C.muted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>{s.label}</div>
-                  <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:18, color:s.accent }}>#{s.rank}</div>
+                  <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:18, color:s.accent }}>{s.rank == null ? "—" : `#${s.rank}`}</div>
                 </div>
               </div>
               {s.rank <= s.max && (
@@ -463,7 +425,7 @@ function MyRankFloater({ player }) {
             background:`linear-gradient(135deg, ${C.a4}, ${C.a5})`,
             display:"flex", alignItems:"center", justifyContent:"center",
             fontSize:18, boxShadow:`0 0 12px ${C.a4}44`,
-          }}>{player.avatar}</div>
+          }}><Avatar src={player.avatar} size={28} radius={8} /></div>
           <div>
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
               <span style={{ fontWeight:800, fontSize:14, color:C.a4 }}>{player.username}</span>
@@ -490,50 +452,50 @@ function MyRankFloater({ player }) {
 }
 
 export default function LeaderboardPage() {
-  const [view, setView] = useState("global");
-  const [serverList, setServerList] = useState(null);
-  const [myProfile, setMyProfile]   = useState(null);
-  const [myRankData, setMyRankData] = useState(null);
+  const [view,        setView]        = useState("global");
+  const [serverList,  setServerList]  = useState(null);
+  const [listLoading, setListLoading] = useState(true);
+  const [myProfile,   setMyProfile]   = useState(null);
+  const [myRankData,  setMyRankData]  = useState(null);
+  const [rankLoading, setRankLoading] = useState(isLoggedIn());
   const myUsername = getUsername();
 
   useEffect(() => {
-    if (!isLoggedIn()) return;
+    if (!isLoggedIn()) { setRankLoading(false); return; }
     Promise.all([api.me(), api.myRank()])
       .then(([meRes, rankRes]) => { setMyProfile(meRes.profile); setMyRankData(rankRes); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setRankLoading(false));
   }, []);
 
   useEffect(() => {
-    if (!isLoggedIn()) return;
+    // For national/state, wait for profile so we know country/state before querying
+    if (isLoggedIn() && rankLoading && (view === "national" || view === "state")) return;
+    setListLoading(true);
+    setServerList(null);
     const params = { scope: view };
     if (view === "national" && myProfile?.country) params.country = myProfile.country;
     if (view === "state"    && myProfile?.state)   params.state   = myProfile.state;
     api.leaderboard(params)
       .then(d => setServerList(mapServerList(d.leaderboard)))
-      .catch(() => setServerList(null));
-  }, [view, myProfile]);
+      .catch(() => setServerList([]))
+      .finally(() => setListLoading(false));
+  }, [view, myProfile, rankLoading]);
 
   const effectiveMe = myProfile ? {
-    username:     myProfile.username    || myUsername    || ME.username,
-    avatar:       myProfile.avatar_icon || ME.avatar,
-    country:      myProfile.country     || ME.country,
-    countryFlag:  countryObj(myProfile.country)?.flag || ME.countryFlag,
-    state:        myProfile.state       || ME.state,
-    score:        myRankData?.score        ?? ME.score,
-    globalRank:   myRankData?.globalRank   ?? ME.globalRank,
-    nationalRank: myRankData?.nationalRank ?? ME.nationalRank,
-    stateRank:    myRankData?.stateRank    ?? ME.stateRank,
-    level:        myProfile.level          || ME.level,
-  } : ME;
+    username:     myProfile.username    || myUsername || "",
+    avatar:       myProfile.avatar_icon || "🎯",
+    country:      myProfile.country     || "",
+    countryFlag:  countryObj(myProfile.country)?.flag || "🌐",
+    state:        myProfile.state       || "",
+    score:        myRankData?.score        ?? 0,
+    globalRank:   myRankData?.globalRank   ?? null,
+    nationalRank: myRankData?.nationalRank ?? null,
+    stateRank:    myRankData?.stateRank    ?? null,
+    level:        myProfile.level          || 1,
+  } : null;
 
-  const list = useMemo(() => {
-    if (serverList !== null) return serverList;
-    if (view === "global")   return GLOBAL_TOP;
-    if (view === "national") return NATIONAL_TOP;
-    if (view === "state")    return STATE_TOP;
-    if (view === "friends")  return FRIENDS_TOP;
-    return [];
-  }, [view, serverList]);
+  const list = useMemo(() => serverList ?? [], [serverList]);
 
   const me   = list.find(p => p.isMe);
   const top3 = list.slice(0, 3);
@@ -581,13 +543,13 @@ export default function LeaderboardPage() {
             </div>
           </div>
 
-          <MyRankCard me={effectiveMe} />
+          {isLoggedIn() && <MyRankCard me={effectiveMe} loading={rankLoading} />}
 
           <div style={{ display:"flex", gap:4, overflowX:"auto", borderBottom:`1px solid ${C.border}`, padding:"0" }}>
             {[
               { id:"global",   label:"🌍 Global",   sub:"Worldwide"   },
-              { id:"national", label:"🇺🇸 National", sub: effectiveMe.country },
-              { id:"state",    label:"📍 State",    sub: effectiveMe.state   },
+              { id:"national", label:"🇺🇸 National", sub: effectiveMe?.country || "National" },
+              { id:"state",    label:"📍 State",    sub: effectiveMe?.state   || "State"    },
               { id:"friends",  label:"👥 Friends",  sub:"Your circle"  },
             ].map(t => (
               <button key={t.id} onClick={() => setView(t.id)} style={{
@@ -608,13 +570,13 @@ export default function LeaderboardPage() {
       </div>
 
       <div style={{ maxWidth:840, margin:"0 auto", padding:"0 24px" }}>
-        <Podium top3={top3} />
+        {!listLoading && list.length >= 3 && <Podium top3={top3} />}
 
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", marginBottom:8, flexWrap:"wrap", gap:8 }}>
           <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:18 }}>
             {view === "global"   && "🌍 Global Rankings"}
-            {view === "national" && `🇺🇸 ${effectiveMe.country} Top Players`}
-            {view === "state"    && `📍 ${effectiveMe.state} Top Players`}
+            {view === "national" && `🇺🇸 ${effectiveMe?.country || "National"} Top Players`}
+            {view === "state"    && `📍 ${effectiveMe?.state   || "State"} Top Players`}
             {view === "friends"  && "👥 Friends Leaderboard"}
           </h3>
           <div style={{ display:"flex", gap:6, fontSize:11, color:C.muted, fontWeight:700 }}>
@@ -625,18 +587,36 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-          {rest.map((p, i) => (
-            <div key={p.rank} style={{ animationDelay:`${Math.min(i*0.015, 0.5)}s` }}>
-              <PlayerRow player={p} showLocation={showLocation} />
-            </div>
-          ))}
-        </div>
+        {listLoading ? (
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {Array.from({ length: 10 }, (_, i) => (
+              <div key={i} style={{
+                height:64, borderRadius:14,
+                background:C.card2, border:`1.5px solid ${C.border}`,
+                opacity: 1 - i * 0.07,
+                animation:"pulse 1.5s ease-in-out infinite",
+                animationDelay:`${i * 0.05}s`,
+              }} />
+            ))}
+          </div>
+        ) : list.length === 0 ? (
+          <div style={{ textAlign:"center", color:C.muted, fontSize:14, fontWeight:600, padding:"48px 0" }}>
+            {view === "friends" ? "No friends on the leaderboard yet" : "No players found"}
+          </div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {rest.map((p, i) => (
+              <div key={p.rank} style={{ animationDelay:`${Math.min(i*0.015, 0.5)}s` }}>
+                <PlayerRow player={p} showLocation={showLocation} />
+              </div>
+            ))}
+          </div>
+        )}
 
         <div style={{ textAlign:"center", color:C.muted, fontSize:12, fontWeight:600, padding:"24px 0 8px" }}>
-          {view === "friends"
+          {!listLoading && (view === "friends"
             ? `${list.length} friend${list.length !== 1 ? "s" : ""} on the leaderboard`
-            : `Showing top ${rest.length + 3} players · Updated live`}
+            : `Showing top ${rest.length + 3} players · Updated live`)}
         </div>
 
         <div style={{
