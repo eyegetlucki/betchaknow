@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AuthFlow       from './Auth';
 import LobbyFlow      from './Lobby';
 import GameFlow       from './Game';
@@ -8,7 +8,7 @@ import ShopPage       from './Shop';
 import FriendsFlow    from './Friends';
 import ChallengesPage from './Challenges';
 import BattlePassPage from './BattlePass';
-import { isLoggedIn, api, saveSession } from './api';
+import { isLoggedIn, api, saveSession, clearSession } from './api';
 import { supabase } from './supabaseClient';
 
 const NAV_ITEMS = [
@@ -46,12 +46,163 @@ const css = `
   .bk-nav-btn .bk-label { font-size:10px; font-weight:700; letter-spacing:0.4px; }
   .bk-nav-btn.active .bk-icon { filter:drop-shadow(0 0 6px #4d96ff88); }
 
-  @keyframes bk-fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes bk-popIn  { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
-  @keyframes bk-float  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
-  @keyframes bk-orb    { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-20px) scale(1.1)} }
-  @keyframes bk-spin   { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes bk-fadeUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes bk-popIn    { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
+  @keyframes bk-slideUp  { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes bk-float    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+  @keyframes bk-orb      { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-20px) scale(1.1)} }
+  @keyframes bk-spin     { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  .bk-range { -webkit-appearance:none; width:100%; height:4px; border-radius:2px; background:#2e2b4a; outline:none; cursor:pointer; }
+  .bk-range::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:#4d96ff; cursor:pointer; box-shadow:0 0 8px #4d96ff66; transition:transform 0.12s; }
+  .bk-range::-webkit-slider-thumb:hover { transform:scale(1.2); }
+  .bk-range:disabled { opacity:0.3; cursor:not-allowed; }
+  .bk-range:disabled::-webkit-slider-thumb { cursor:not-allowed; }
+
+  .bk-profile-menu-btn { display:flex; align-items:center; gap:8px; width:100%; padding:8px 12px; background:none; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.12s; }
+  .bk-profile-menu-btn:hover { background:#ffffff0d; }
 `;
+
+function Toggle({ enabled, onChange }) {
+  return (
+    <button
+      onClick={onChange}
+      style={{
+        width:42, height:24, borderRadius:12, flexShrink:0,
+        background: enabled ? "#4d96ff" : "#2e2b4a",
+        border:"none", cursor:"pointer", position:"relative",
+        transition:"background 0.2s", padding:0,
+      }}
+    >
+      <div style={{
+        position:"absolute", top:4, left: enabled ? 22 : 4,
+        width:16, height:16, borderRadius:"50%", background:"#fff",
+        transition:"left 0.2s", boxShadow:"0 1px 4px #0006",
+      }} />
+    </button>
+  );
+}
+
+function SettingsPanel({ settings, onUpdate, onClose }) {
+  const S = {
+    overlay: {
+      position:"fixed", inset:0, zIndex:500,
+      display:"flex", alignItems:"center", justifyContent:"center",
+      padding:"24px 20px",
+      background:"#08070fcc",
+      backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)",
+    },
+    card: {
+      background:"linear-gradient(160deg,#13111f 0%,#0f0d1c 100%)",
+      border:"1px solid #2a2645",
+      borderRadius:28, padding:"28px 28px 32px",
+      width:"100%", maxWidth:420,
+      boxShadow:"0 32px 80px #000000cc",
+      animation:"bk-popIn 0.25s cubic-bezier(.17,.67,.35,1.15)",
+      fontFamily:"'DM Sans',sans-serif",
+    },
+    sectionLabel: {
+      fontSize:10, fontWeight:800, letterSpacing:1.5, textTransform:"uppercase",
+      color:"#4a4870", marginBottom:14, marginTop:24,
+    },
+    row: {
+      display:"flex", alignItems:"center", justifyContent:"space-between",
+      gap:16, marginBottom:10,
+    },
+    label: { color:"#f0eeff", fontSize:14, fontWeight:700 },
+    sub:   { color:"#6b6890", fontSize:12, fontWeight:500, marginTop:1 },
+  };
+
+  const sections = [
+    {
+      id:"audio", label:"🎵 Audio",
+      rows:[
+        { key:"musicEnabled",   label:"Music",          sub:"Background music during menus & lobby", type:"toggle" },
+        { key:"musicVolume",    label:"Music Volume",   sub:null, type:"slider", enabledBy:"musicEnabled" },
+        { key:"sfxEnabled",     label:"Sound Effects",  sub:"In-game sounds & feedback",             type:"toggle" },
+        { key:"sfxVolume",      label:"SFX Volume",     sub:null, type:"slider", enabledBy:"sfxEnabled" },
+      ],
+    },
+    {
+      id:"display", label:"🎨 Display",
+      rows:[
+        { key:"animationsEnabled", label:"Animations", sub:"Screen transitions and particle effects", type:"toggle" },
+        { key:"showPointsDelta",   label:"Point Popups", sub:"Show +/- point changes during reveals", type:"toggle" },
+      ],
+    },
+  ];
+
+  return (
+    <div style={S.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={S.card}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+          <h2 style={{ margin:0, fontFamily:"'Boogaloo',cursive", fontSize:26, color:"#f0eeff" }}>
+            ⚙️ Settings
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              background:"#ffffff0d", border:"1px solid #2a2645",
+              borderRadius:10, width:32, height:32, cursor:"pointer",
+              color:"#8884aa", fontSize:16, display:"flex",
+              alignItems:"center", justifyContent:"center",
+            }}
+          >✕</button>
+        </div>
+
+        {sections.map(sec => (
+          <div key={sec.id}>
+            <div style={S.sectionLabel}>{sec.label}</div>
+            <div style={{ background:"#100e1c", borderRadius:16, overflow:"hidden", border:"1px solid #1e1b35" }}>
+              {sec.rows.map((row, i) => {
+                const disabled = row.enabledBy && !settings[row.enabledBy];
+                return (
+                  <div
+                    key={row.key}
+                    style={{
+                      padding:"13px 16px",
+                      borderTop: i > 0 ? "1px solid #1a1830" : "none",
+                      opacity: disabled ? 0.45 : 1,
+                      transition:"opacity 0.2s",
+                    }}
+                  >
+                    {row.type === "toggle" && (
+                      <div style={S.row}>
+                        <div>
+                          <div style={S.label}>{row.label}</div>
+                          {row.sub && <div style={S.sub}>{row.sub}</div>}
+                        </div>
+                        <Toggle
+                          enabled={settings[row.key]}
+                          onChange={() => onUpdate(row.key, !settings[row.key])}
+                        />
+                      </div>
+                    )}
+                    {row.type === "slider" && (
+                      <div>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                          <span style={S.label}>{row.label}</span>
+                          <span style={{ color:"#4d96ff", fontWeight:800, fontSize:13 }}>{settings[row.key]}%</span>
+                        </div>
+                        <input
+                          type="range" min={0} max={100}
+                          value={settings[row.key]}
+                          disabled={disabled}
+                          onChange={e => onUpdate(row.key, Number(e.target.value))}
+                          className="bk-range"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Username setup overlay (shown to new OAuth users) ────────────────────────
 function UsernameSetup({ onDone }) {
@@ -289,6 +440,34 @@ export default function App() {
   const [avatarUrl,     setAvatarUrl]     = useState(() => localStorage.getItem("bk_avatar") || "");
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [oauthError,    setOauthError]    = useState("");
+  const [showSettings,  setShowSettings]  = useState(false);
+  const [profileMenu,   setProfileMenu]   = useState(false);
+  const menuTimer = useRef(null);
+  const openProfileMenu  = () => { clearTimeout(menuTimer.current); setProfileMenu(true); };
+  const closeProfileMenu = () => { menuTimer.current = setTimeout(() => setProfileMenu(false), 180); };
+  const [settings, setSettings] = useState(() => ({
+    musicEnabled:      localStorage.getItem("bk_music")       !== "0",
+    musicVolume:       parseInt(localStorage.getItem("bk_music_vol")  || "70"),
+    sfxEnabled:        localStorage.getItem("bk_sfx")         !== "0",
+    sfxVolume:         parseInt(localStorage.getItem("bk_sfx_vol")    || "80"),
+    animationsEnabled: localStorage.getItem("bk_animations")  !== "0",
+    showPointsDelta:   localStorage.getItem("bk_pts_delta")   !== "0",
+  }));
+
+  const updateSetting = (key, value) => {
+    setSettings(s => ({ ...s, [key]: value }));
+    const keys = { musicEnabled:"bk_music", musicVolume:"bk_music_vol", sfxEnabled:"bk_sfx", sfxVolume:"bk_sfx_vol", animationsEnabled:"bk_animations", showPointsDelta:"bk_pts_delta" };
+    if (keys[key]) localStorage.setItem(keys[key], typeof value === "boolean" ? (value ? "1" : "0") : String(value));
+  };
+
+  const handleLogout = async () => {
+    clearSession();
+    try { if (supabase) await supabase.auth.signOut(); } catch {}
+    setLoggedIn(false);
+    setAvatarUrl("");
+    setSection("lobby");
+    setProfileMenu(false);
+  };
 
   // Handle OAuth redirect callback (Google / Discord)
   useEffect(() => {
@@ -300,8 +479,10 @@ export default function App() {
         const provider = session.user.app_metadata?.provider || "google";
         const oauthAvatar = session.user.user_metadata?.avatar_url || "";
         const result = await api.oauth({ provider, access_token: session.access_token });
-        saveSession({ token: result.token, refreshToken: result.refreshToken, username: result.profile?.username, avatarUrl: oauthAvatar });
-        if (oauthAvatar) setAvatarUrl(oauthAvatar);
+        // Uploaded avatar (stored in DB) takes priority over the OAuth provider avatar
+        const finalAvatar = result.profile?.avatar_icon || oauthAvatar;
+        saveSession({ token: result.token, refreshToken: result.refreshToken, username: result.profile?.username, avatarUrl: finalAvatar });
+        if (finalAvatar) setAvatarUrl(finalAvatar);
         setLoggedIn(true);
         setGateFor(null);
         setScreen("main");
@@ -324,6 +505,22 @@ export default function App() {
       }
     });
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Clear expired token on mount so UI never shows a stale logged-in state
+  useEffect(() => {
+    if (localStorage.getItem("bk_token") && !isLoggedIn()) {
+      clearSession();
+      setLoggedIn(false);
+      setAvatarUrl("");
+    }
+  }, []);
+
+  // Handle Stripe redirect back to app — navigate to the right section
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("purchase")) setSection("shop");
+    if (params.has("vip"))      setSection("battlepass");
   }, []);
 
   const handleNavClick = (id) => {
@@ -395,7 +592,7 @@ export default function App() {
       {section === "shop"        && <ShopPage />}
       {section === "friends"     && <FriendsFlow />}
       {section === "battlepass"  && <BattlePassPage />}
-      {section === "profile"     && <ProfilePage />}
+      {section === "profile"     && <ProfilePage onAvatarChange={setAvatarUrl} />}
 
       {/* OAuth error banner */}
       {oauthError && (
@@ -425,6 +622,14 @@ export default function App() {
         />
       )}
 
+      {showSettings && (
+        <SettingsPanel
+          settings={settings}
+          onUpdate={updateSetting}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
       <nav style={{
         position:"fixed", top:0, left:0, right:0,
         background:"#100e1c",
@@ -437,22 +642,11 @@ export default function App() {
           let icon;
           if (tab.id === "profile" && loggedIn) {
             if (avatarUrl) {
-              icon = (
-                <img
-                  src={avatarUrl}
-                  alt="avatar"
-                  style={{ width:22, height:22, borderRadius:"50%", objectFit:"cover", display:"block" }}
-                />
-              );
+              icon = <img src={avatarUrl} alt="avatar" style={{ width:22, height:22, borderRadius:"50%", objectFit:"cover", display:"block" }} />;
             } else {
               const initial = (localStorage.getItem("bk_username") || "?")[0].toUpperCase();
               icon = (
-                <span style={{
-                  width:22, height:22, borderRadius:"50%",
-                  background:"linear-gradient(135deg,#4d96ff,#6e56cf)",
-                  display:"flex", alignItems:"center", justifyContent:"center",
-                  fontSize:11, fontWeight:800, color:"#fff",
-                }}>
+                <span style={{ width:22, height:22, borderRadius:"50%", background:"linear-gradient(135deg,#4d96ff,#6e56cf)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800, color:"#fff" }}>
                   {initial}
                 </span>
               );
@@ -460,6 +654,73 @@ export default function App() {
           } else {
             icon = tab.icon;
           }
+
+          if (tab.id === "profile") {
+            return (
+              <div
+                key="profile"
+                style={{ flex:1, position:"relative" }}
+                onMouseEnter={openProfileMenu}
+                onMouseLeave={closeProfileMenu}
+              >
+                <button
+                  className={`bk-nav-btn ${section === "profile" ? "active" : ""}`}
+                  onClick={() => handleNavClick("profile")}
+                  style={{ width:"100%" }}
+                >
+                  <span className="bk-icon">{icon}</span>
+                  <span className="bk-label">Profile</span>
+                </button>
+
+                {profileMenu && (
+                  <div
+                    onMouseEnter={openProfileMenu}
+                    onMouseLeave={closeProfileMenu}
+                    style={{
+                      position:"absolute", top:"100%", right:0,
+                      paddingTop:6,
+                      background:"transparent",
+                      zIndex:200,
+                    }}
+                  >
+                  <div style={{
+                    background:"#13111f", border:"1px solid #2a2645",
+                    borderRadius:14, padding:6, minWidth:148,
+                    boxShadow:"0 8px 32px #000000aa",
+                    animation:"bk-slideUp 0.15s ease",
+                  }}>
+                    <button
+                      className="bk-profile-menu-btn"
+                      style={{ color:"#f0eeff" }}
+                      onClick={() => { setProfileMenu(false); setShowSettings(true); }}
+                    >
+                      ⚙️ Settings
+                    </button>
+                    {loggedIn && (
+                      <button
+                        className="bk-profile-menu-btn"
+                        style={{ color:"#ff6b6b" }}
+                        onClick={handleLogout}
+                      >
+                        🚪 Log Out
+                      </button>
+                    )}
+                    {!loggedIn && (
+                      <button
+                        className="bk-profile-menu-btn"
+                        style={{ color:"#4d96ff" }}
+                        onClick={() => { setProfileMenu(false); setScreen("auth"); }}
+                      >
+                        🔑 Sign In
+                      </button>
+                    )}
+                  </div>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <button
               key={tab.id}
