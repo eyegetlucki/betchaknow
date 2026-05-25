@@ -517,6 +517,15 @@ export default function App() {
     }
   }, []);
 
+  // iOS bfcache fix: when Safari restores a frozen page (app switcher / back gesture),
+  // the socket connection is dead but React state still thinks it's live. Force a clean
+  // reload so the app starts fresh instead of showing a broken/error state.
+  useEffect(() => {
+    const onPageShow = (e) => { if (e.persisted) window.location.reload(); };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
   // Handle Stripe redirect back to app — navigate to the right section
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
