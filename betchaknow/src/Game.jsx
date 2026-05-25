@@ -89,7 +89,13 @@ const css = `
   @keyframes scoreUp  { 0%{opacity:0;transform:translateY(0)} 60%{opacity:1;transform:translateY(-28px)} 100%{opacity:0;transform:translateY(-48px)} }
   @keyframes reveal   { from{opacity:0;transform:scale(0.8) rotateY(90deg)} to{opacity:1;transform:scale(1) rotateY(0deg)} }
   @keyframes confetti { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(120px) rotate(720deg);opacity:0} }
-  @keyframes fxDrop   { 0%{transform:translateY(-40px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(540deg);opacity:0} }
+  @keyframes fxDrop     { 0%{transform:translateY(-40px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(540deg);opacity:0} }
+  @keyframes fxConfetti { 0%{transform:translateY(-60px) rotate(0deg);opacity:1} 100%{transform:translateY(108vh) rotate(900deg);opacity:0.15} }
+  @keyframes fxMoney    { 0%{transform:translateY(-60px) rotateZ(-20deg) rotateY(0deg);opacity:1} 50%{transform:translateY(48vh) rotateZ(12deg) rotateY(180deg)} 100%{transform:translateY(108vh) rotateZ(-8deg) rotateY(360deg);opacity:0.15} }
+  @keyframes fxBurst    { 0%{transform:translate(-50%,-50%) scale(0.2);opacity:1} 65%{opacity:1} 100%{transform:translate(calc(-50% + var(--bx,0px)),calc(-50% + var(--by,0px))) scale(0.35);opacity:0} }
+  @keyframes fxLightning{ 0%{transform:translateY(-80px) scale(2.2);opacity:1;filter:brightness(3.5) saturate(2)} 25%{filter:brightness(2)} 100%{transform:translateY(108vh) scale(0.5);opacity:0;filter:brightness(1)} }
+  @keyframes fxGalaxy   { 0%{transform:translate(-50%,-50%) scale(0.15);opacity:0} 12%{transform:translate(-50%,-50%) scale(1.3);opacity:1} 100%{transform:translate(calc(-50% + var(--bx,0px)),calc(-50% + var(--by,0px))) scale(0.25);opacity:0} }
+  @keyframes fxFlash    { 0%{opacity:0} 8%{opacity:1} 50%{opacity:0.65} 100%{opacity:0} }
   button { font-family:'Nunito',sans-serif; cursor:pointer; transition:transform 0.12s,box-shadow 0.12s; }
   button:not(:disabled):hover  { transform:scale(1.03) !important; }
   button:not(:disabled):active { transform:scale(0.96) !important; }
@@ -458,6 +464,17 @@ function BlindBetScreen({ players, myPlayer, round, totalRounds, timerSecs, cate
   );
 }
 
+function getCardSkinStyle() {
+  const id = localStorage.getItem("bk_equipped_cards") || "card_default";
+  const skins = {
+    card_holo:    { bg:"#0e0e22", border:"#9370db88", shadow:"0 0 14px #c77dff22, inset 0 0 20px #4d96ff0a" },
+    card_gold:    { bg:"#14120a", border:"#d4ac0d66", shadow:"0 0 10px #f0a50022" },
+    card_neon:    { bg:"#0c1020", border:"#4d96ff66", shadow:"0 0 18px #4d96ff33, inset 0 0 12px #4d96ff08" },
+    card_diamond: { bg:"#0d1520", border:"#a0d8ef66", shadow:"0 0 10px #a0d8ef22, inset 0 0 8px #ffffff06" },
+  };
+  return skins[id] || null;
+}
+
 function QuestionScreen({ question, players, myPlayer, myBet: myBetProp, timerSecs, onSubmit }) {
   const myBet = myBetProp ?? { type: "none", amount: 0, targetId: null };
   const [selected, setSelected]       = useState(null);
@@ -536,14 +553,16 @@ function QuestionScreen({ question, players, myPlayer, myBet: myBetProp, timerSe
         {question.options.map((opt, i) => {
           const letters = ["A","B","C","D"];
           const isSelected = selected === i;
+          const skin = getCardSkinStyle();
           return (
             <button
               key={i}
               disabled={submitted}
               onClick={() => setSelected(i)}
               style={{
-                background: isSelected ? C.accent4+"22" : "#13121f",
-                border:`2px solid ${isSelected ? C.accent4 : C.cardBorder}`,
+                background: isSelected ? C.accent4+"22" : (skin?.bg || "#13121f"),
+                border: `2px solid ${isSelected ? C.accent4 : (skin?.border || C.cardBorder)}`,
+                boxShadow: !isSelected ? (skin?.shadow || "none") : "none",
                 borderRadius:14, padding:"13px 14px", textAlign:"left",
                 color: isSelected ? C.accent4 : C.text,
                 fontWeight:800, fontSize:14,
@@ -667,7 +686,7 @@ function RevealScreen({ question, players, round, totalRounds }) {
     ];
     if (iGotItRight) {
       timers.push(setTimeout(() => setShowFX(true),  800));
-      timers.push(setTimeout(() => setShowFX(false), 3800));
+      timers.push(setTimeout(() => setShowFX(false), 4200));
     }
     return () => timers.forEach(clearTimeout);
   }, []);
@@ -972,33 +991,71 @@ function CategoryVoteScreen({ options, voteCounts, round, totalRounds, timerSecs
 }
 
 const FX_CONFIG = {
-  fx_confetti:  { items: ["🟥","🟨","🟩","🟦","🟪","🟧"], count: 28 },
-  fx_money:     { items: ["💵","💰","💸"],                  count: 20 },
-  fx_fireworks: { items: ["✨","🎆","🌟","💥"],             count: 22 },
-  fx_lightning: { items: ["⚡","🔥","💫"],                  count: 20 },
-  fx_galaxy:    { items: ["🌟","⭐","💫","🌠","✨"],        count: 26 },
+  fx_confetti: {
+    items: ["🟥","🟨","🟩","🟦","🟪","🟧","⬛","🟫"],
+    count: 48, anim: "fxConfetti", burst: false,
+    durRange: [1.4, 2.6], overlay: null,
+  },
+  fx_money: {
+    items: ["💵","💸","💰","💵","💵","💸"],
+    count: 36, anim: "fxMoney", burst: false,
+    durRange: [1.6, 2.8], overlay: "#ffd93d1e",
+  },
+  fx_fireworks: {
+    items: ["🎆","✨","💥","🌟","🎇","⭐"],
+    count: 34, anim: "fxBurst", burst: true, burstDist: 270,
+    durRange: [0.9, 1.8], overlay: "#ff6b6b20",
+  },
+  fx_lightning: {
+    items: ["⚡","⚡","💫","⚡","✨","⚡"],
+    count: 30, anim: "fxLightning", burst: false,
+    durRange: [0.45, 1.05], overlay: "#4d96ff2e",
+  },
+  fx_galaxy: {
+    items: ["🌟","⭐","💫","🌠","✨","🌌","⭐"],
+    count: 52, anim: "fxGalaxy", burst: true, burstDist: 350,
+    durRange: [1.8, 3.2], overlay: "#c77dff26",
+  },
 };
 
 function VictoryFX() {
   const fxId = localStorage.getItem("bk_equipped_fx") || "fx_confetti";
-  const cfg   = FX_CONFIG[fxId] || FX_CONFIG.fx_confetti;
+  const cfg  = FX_CONFIG[fxId] || FX_CONFIG.fx_confetti;
+  const [d0, d1] = cfg.durRange;
+
   const particles = useMemo(() =>
-    Array.from({ length: cfg.count }, (_, i) => ({
-      id:    i,
-      left:  `${3 + (i * 3.5 + i * i * 0.3) % 94}%`,
-      delay: `${((i * 0.06) % 0.8).toFixed(2)}s`,
-      dur:   `${1.2 + (i % 4) * 0.25}s`,
-      emoji: cfg.items[i % cfg.items.length],
-      size:  16 + (i % 3) * 6,
-    })), []);
+    Array.from({ length: cfg.count }, (_, i) => {
+      const angle = (i / cfg.count) * Math.PI * 2 + (i % 3) * 0.37;
+      const dist  = (cfg.burstDist || 200) * (0.5 + (i % 5) * 0.13);
+      return {
+        id:    i,
+        left:  cfg.burst ? "50%" : `${3 + (i * 3.7 + i * i * 0.28) % 94}%`,
+        top:   cfg.burst ? "42%" : "-60px",
+        delay: `${((i * 0.055) % 0.75).toFixed(2)}s`,
+        dur:   `${(d0 + ((i % 7) / 6) * (d1 - d0)).toFixed(2)}s`,
+        emoji: cfg.items[i % cfg.items.length],
+        size:  20 + (i % 3) * 8,
+        bx:    cfg.burst ? `${Math.cos(angle) * dist}px` : "0px",
+        by:    cfg.burst ? `${Math.sin(angle) * dist}px` : "0px",
+      };
+    }), [cfg]);
 
   return (
     <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:200, overflow:"hidden" }}>
+      {cfg.overlay && (
+        <div style={{
+          position:"absolute", inset:0,
+          background: cfg.overlay,
+          animation: "fxFlash 1.5s ease forwards",
+        }} />
+      )}
       {particles.map(p => (
         <div key={p.id} style={{
-          position:"absolute", left:p.left, top:"-40px",
-          fontSize:p.size,
-          animation:`fxDrop ${p.dur} ${p.delay} ease forwards`,
+          position:"absolute", left:p.left, top:p.top,
+          fontSize: p.size,
+          animation: `${cfg.anim} ${p.dur} ${p.delay} ease forwards`,
+          "--bx": p.bx,
+          "--by": p.by,
         }}>{p.emoji}</div>
       ))}
     </div>

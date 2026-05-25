@@ -736,6 +736,7 @@ export default function ShopPage() {
       setEquipped(prev => ({ ...prev, [slot]: item.id }));
       if (slot === "theme")  localStorage.setItem("bk_equipped_theme",     item.id);
       if (slot === "fx")     localStorage.setItem("bk_equipped_fx",        item.id);
+      if (slot === "cards")  localStorage.setItem("bk_equipped_cards",     item.id);
       if (slot === "avatar") localStorage.setItem("bk_equipped_character", item.icon);
       if (isLoggedIn()) api.equip({ slot, itemId: item.id }).catch(() => {});
       showToast(`Equipped ${item.name}!`);
