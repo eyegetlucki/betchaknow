@@ -19,7 +19,6 @@ const C = {
 };
 
 const SEASON = { name:"Season I: Origins", themeIcon:"🎰", endsIn:"23 days", totalTiers:40 };
-const PLAYER = { tier:14, xp:720, xpPerTier:1000, hasVIP:false, claimedFree:[1,2,3,4,5,6,7,8,9,10,11,12], claimedPrem:[] };
 
 function getFreeReward(tier) {
   if (tier % 10 === 0) return { type:"coins",  amount:50,  icon:"💰", name:`${50} BK Bucks`, rarity:"rare"   };
@@ -254,28 +253,33 @@ function VIPModal({ open, onClose, onPurchase }) {
 }
 
 export default function BattlePassPage() {
-  const [tier,        setTier]        = useState(PLAYER.tier);
-  const [hasVIP,      setHasVIP]      = useState(PLAYER.hasVIP);
-  const [claimedFree, setClaimedFree] = useState([...PLAYER.claimedFree]);
-  const [claimedPrem, setClaimedPrem] = useState([...PLAYER.claimedPrem]);
+  const [tier,        setTier]        = useState(0);
+  const [xp,          setXp]          = useState(0);
+  const xpPerTier = 1000;
+  const [hasVIP,      setHasVIP]      = useState(false);
+  const [claimedFree, setClaimedFree] = useState([]);
+  const [claimedPrem, setClaimedPrem] = useState([]);
   const [popup,       setPopup]       = useState(null);
   const [vipModal,    setVipModal]    = useState(false);
   const [view,        setView]        = useState("track");
+  const [loading,     setLoading]     = useState(true);
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    if (!isLoggedIn()) return;
+    if (!isLoggedIn()) { setLoading(false); return; }
     Promise.all([api.battlePass(), api.me()])
       .then(([bpRes, meRes]) => {
         const bp = bpRes.battlePass;
         if (bp) {
-          setTier(bp.current_tier || PLAYER.tier);
-          setClaimedFree(bp.claimed_free || [...PLAYER.claimedFree]);
-          setClaimedPrem(bp.claimed_premium || [...PLAYER.claimedPrem]);
+          setTier(bp.current_tier || 0);
+          setXp(bp.xp || 0);
+          setClaimedFree(bp.claimed_free || []);
+          setClaimedPrem(bp.claimed_premium || []);
         }
         if (meRes.profile?.is_vip) setHasVIP(true);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -304,7 +308,7 @@ export default function BattlePassPage() {
 
   const unclaimedFree = REWARDS.filter(r => r.tier <= tier && !claimedFree.includes(r.tier)).length;
   const unclaimedPrem = hasVIP ? REWARDS.filter(r => r.tier <= tier && !claimedPrem.includes(r.tier)).length : 0;
-  const xpPct = Math.round((PLAYER.xp / PLAYER.xpPerTier) * 100);
+  const xpPct = Math.round((xp / xpPerTier) * 100);
 
   return (
     <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
@@ -345,35 +349,46 @@ export default function BattlePassPage() {
           </div>
 
           <div style={{ background:C.card2, border:`1px solid ${C.border}`, borderRadius:18, padding:"18px 22px", marginBottom:20 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
-              <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-                <div style={{ width:54, height:54, borderRadius:"50%", background:`linear-gradient(135deg, ${C.a4}, ${C.a5})`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Boogaloo',cursive", fontSize:24, color:"#fff", boxShadow:`0 0 24px ${C.a4}55`, animation:"pulse 2.5s ease-in-out infinite" }}>{tier}</div>
-                <div>
-                  <div style={{ fontSize:11, color:C.muted, fontWeight:700, letterSpacing:1, textTransform:"uppercase" }}>Current Tier</div>
-                  <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color:C.text }}>Tier {tier} → Tier {tier+1}</div>
-                </div>
+            {loading ? (
+              <div style={{ textAlign:"center", padding:"20px 0", color:C.muted, fontSize:13, fontWeight:600 }}>Loading...</div>
+            ) : !isLoggedIn() ? (
+              <div style={{ textAlign:"center", padding:"20px 0" }}>
+                <div style={{ fontSize:32, marginBottom:8 }}>🔒</div>
+                <div style={{ fontSize:14, color:C.muted, fontWeight:600 }}>Sign in to track your Battle Pass progress</div>
               </div>
-              <div style={{ display:"flex", gap:14, flexWrap:"wrap" }}>
-                <div style={{ textAlign:"center" }}>
-                  <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color: unclaimedFree > 0 ? C.a3 : C.muted }}>{unclaimedFree}</div>
-                  <div style={{ fontSize:10, color:C.muted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Free Rewards</div>
+            ) : (
+              <>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                    <div style={{ width:54, height:54, borderRadius:"50%", background:`linear-gradient(135deg, ${C.a4}, ${C.a5})`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Boogaloo',cursive", fontSize:24, color:"#fff", boxShadow:`0 0 24px ${C.a4}55`, animation:"pulse 2.5s ease-in-out infinite" }}>{tier}</div>
+                    <div>
+                      <div style={{ fontSize:11, color:C.muted, fontWeight:700, letterSpacing:1, textTransform:"uppercase" }}>Current Tier</div>
+                      <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color:C.text }}>Tier {tier} → Tier {Math.min(tier+1, SEASON.totalTiers)}</div>
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", gap:14, flexWrap:"wrap" }}>
+                    <div style={{ textAlign:"center" }}>
+                      <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color: unclaimedFree > 0 ? C.a3 : C.muted }}>{unclaimedFree}</div>
+                      <div style={{ fontSize:10, color:C.muted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Free Rewards</div>
+                    </div>
+                    <div style={{ textAlign:"center" }}>
+                      <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color: unclaimedPrem > 0 ? C.a2 : hasVIP ? C.muted : C.muted2 }}>{hasVIP ? unclaimedPrem : "🔒"}</div>
+                      <div style={{ fontSize:10, color:C.muted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Premium {hasVIP ? "" : "Locked"}</div>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ textAlign:"center" }}>
-                  <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color: unclaimedPrem > 0 ? C.a2 : hasVIP ? C.muted : C.muted2 }}>{hasVIP ? unclaimedPrem : "🔒"}</div>
-                  <div style={{ fontSize:10, color:C.muted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Premium {hasVIP ? "" : "Locked"}</div>
-                </div>
-              </div>
-            </div>
 
-            <div>
-              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                <span style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:0.5, textTransform:"uppercase" }}>Tier Progress</span>
-                <span style={{ fontSize:12, fontWeight:700, color:C.a4 }}>{PLAYER.xp.toLocaleString()} / {PLAYER.xpPerTier.toLocaleString()} XP</span>
-              </div>
-              <div style={{ height:10, background:C.border2, borderRadius:5, overflow:"hidden" }}>
-                <div style={{ "--bar-w": `${xpPct}%`, height:"100%", borderRadius:5, background:`linear-gradient(90deg, ${C.a4}, ${C.a5})`, width:`${xpPct}%`, boxShadow:`0 0 14px ${C.a4}88`, animation:"xpBar 1.2s cubic-bezier(.4,0,.2,1) forwards" }} />
-              </div>
-            </div>
+                <div>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                    <span style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:0.5, textTransform:"uppercase" }}>Tier Progress</span>
+                    <span style={{ fontSize:12, fontWeight:700, color:C.a4 }}>{xp.toLocaleString()} / {xpPerTier.toLocaleString()} XP</span>
+                  </div>
+                  <div style={{ height:10, background:C.border2, borderRadius:5, overflow:"hidden" }}>
+                    <div style={{ "--bar-w": `${xpPct}%`, height:"100%", borderRadius:5, background:`linear-gradient(90deg, ${C.a4}, ${C.a5})`, width:`${xpPct}%`, boxShadow:`0 0 14px ${C.a4}88`, animation:"xpBar 1.2s cubic-bezier(.4,0,.2,1) forwards" }} />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <div style={{ display:"flex", gap:2, borderBottom:`1px solid ${C.border}`, paddingBottom:0, overflowX:"auto" }}>
@@ -450,12 +465,12 @@ export default function BattlePassPage() {
             <div style={{ background:C.card2, border:`1px solid ${C.border}`, borderRadius:16, padding:20 }}>
               <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:20, marginBottom:14 }}>⚡ How to Earn XP</h3>
               {[
-                { icon:"🎮", action:"Play a game",       xp:"+100 XP"   },
-                { icon:"🏆", action:"Win a game",        xp:"+75 XP"    },
-                { icon:"🔥", action:"3+ correct streak", xp:"+10 XP/ans" },
-                { icon:"🃏", action:"Successful bluff",  xp:"+25 XP"    },
-                { icon:"📅", action:"Daily login",       xp:"+50 XP"    },
-                { icon:"👑", action:"VIP pass boost",    xp:"+25% all"  },
+                { icon:"✅", action:"Correct answer",     xp:"+15 XP"    },
+                { icon:"🔥", action:"3+ answer streak",   xp:"+25 XP/ans" },
+                { icon:"🥇", action:"1st place finish",   xp:"+1000 XP"  },
+                { icon:"🥈", action:"2nd place finish",   xp:"+450 XP"   },
+                { icon:"🥉", action:"3rd place finish",   xp:"+250 XP"   },
+                { icon:"👑", action:"VIP pass boost",     xp:"+25% all"  },
               ].map((r,i) => (
                 <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom: i < 5 ? `1px solid ${C.border}` : "none" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -505,38 +520,10 @@ export default function BattlePassPage() {
 
         {view === "leaderboard" && (
           <div style={{ padding:"0 24px", animation:"fadeUp 0.4s ease" }}>
-            <div style={{ background:C.card2, border:`1px solid ${C.border}`, borderRadius:16, padding:20 }}>
-              <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, marginBottom:6 }}>🏆 Season Top Earners</h3>
-              <p style={{ fontSize:12, color:C.muted, marginBottom:18 }}>Players with the most XP earned this season</p>
-              {[
-                { rank:1, name:"TriviaKing42",  xp:48200, badge:"🥇"          },
-                { rank:2, name:"BluffMaster99", xp:42100, badge:"🥈", you:true },
-                { rank:3, name:"QuizQueen",     xp:38900, badge:"🥉"          },
-                { rank:4, name:"FastFingers",   xp:35400, badge:"4"           },
-                { rank:5, name:"BetWizard",     xp:33700, badge:"5"           },
-                { rank:6, name:"SmartCookie",   xp:31200, badge:"6"           },
-                { rank:7, name:"WildCard",      xp:29800, badge:"7"           },
-                { rank:8, name:"NerdAlert",     xp:28100, badge:"8"           },
-              ].map((p, i) => (
-                <div key={i} style={{
-                  display:"flex", justifyContent:"space-between", alignItems:"center",
-                  padding:"12px 14px", borderRadius:12, marginBottom:6,
-                  background: p.you ? `linear-gradient(90deg, ${C.a4}22, transparent)` : "transparent",
-                  border: p.you ? `1px solid ${C.a4}55` : "1px solid transparent",
-                  animation:`fadeUp 0.4s ease ${i*0.05}s both`,
-                }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                    <div style={{ width:32, height:32, borderRadius:"50%", background: p.rank <= 3 ? `linear-gradient(135deg, ${C.a2}, ${C.a6})` : C.card, border:`1.5px solid ${p.rank <= 3 ? C.a2 : C.border2}`, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900, fontSize:14, color: p.rank <= 3 ? "#111" : C.text }}>{p.badge}</div>
-                    <div style={{ fontWeight:800, fontSize:14, color: p.you ? C.a4 : C.text }}>
-                      {p.name} {p.you && <span style={{ fontSize:11, color:C.a4 }}>(You)</span>}
-                    </div>
-                  </div>
-                  <div style={{ textAlign:"right" }}>
-                    <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:18, color:C.a4 }}>{p.xp.toLocaleString()}</div>
-                    <div style={{ fontSize:10, color:C.muted, fontWeight:700 }}>XP</div>
-                  </div>
-                </div>
-              ))}
+            <div style={{ background:C.card2, border:`1px solid ${C.border}`, borderRadius:16, padding:40, textAlign:"center" }}>
+              <div style={{ fontSize:52, marginBottom:14 }}>🏆</div>
+              <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:24, marginBottom:8 }}>Season Leaderboard</h3>
+              <p style={{ fontSize:13, color:C.muted, fontWeight:500 }}>Coming soon — keep earning XP to climb the ranks!</p>
             </div>
           </div>
         )}

@@ -9,9 +9,9 @@ const STREAK_MULT      = 1.75;
 const MIN_BET          = 5;
 
 // ─── PLAYER FACTORY ──────────────────────────────────────────────────────────
-function createPlayer({ id, username, avatar, color, isVIP = false }) {
+function createPlayer({ id, username, avatar, character = "", color, isVIP = false }) {
   return {
-    id, username, avatar, color, isVIP,
+    id, username, avatar, character, color, isVIP,
     points:      START_POINTS,
     streak:      0,
     allInUsed:   false,

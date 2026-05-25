@@ -27,7 +27,11 @@ export function connectSocket() {
     s.disconnect();
   }
 
-  s.auth = { token, avatar: localStorage.getItem("bk_avatar") || "" };
+  s.auth = {
+    token,
+    avatar:    localStorage.getItem("bk_avatar")             || "",
+    character: localStorage.getItem("bk_equipped_character") || "",
+  };
   _connectedToken = token;
 
   if (!s.connected) s.connect();

@@ -6,7 +6,7 @@ const config = require("../config");
 const rm     = require("../services/roomManager");
 const { buildQuestionSet } = require("../services/questionService");
 const { getRandomPowerUp, applyPowerUp, resetPlayerRound } = require("../services/gameLogic");
-const { grantXP, calcGameXP } = require("../services/xpService");
+const { grantXP, calcGameXP, calcSeasonXP, grantSeasonXP } = require("../services/xpService");
 const { supabaseAdmin } = require("../db/supabase");
 
 // Helper: emit only to room, respecting anonymous bet setting
@@ -40,15 +40,16 @@ function initSockets(io) {
   });
 
   io.on("connection", (socket) => {
-    const userId   = socket.user?.id;
-    const username = socket.user?.username || `Guest_${socket.id.slice(0, 6)}`;
-    const avatar   = socket.handshake.auth?.avatar || "";
+    const userId    = socket.user?.id;
+    const username  = socket.user?.username || `Guest_${socket.id.slice(0, 6)}`;
+    const avatar    = socket.handshake.auth?.avatar    || "";
+    const character = socket.handshake.auth?.character || "";
 
     console.log(`[Socket] Connected: ${username} (${socket.id})`);
 
     // ── CREATE ROOM ───────────────────────────────────────────────────────────
     socket.on("createRoom", ({ isPrivate = true, settings = {} } = {}) => {
-      const room = rm.createRoom(socket.id, userId || socket.id, username, avatar, isPrivate);
+      const room = rm.createRoom(socket.id, userId || socket.id, username, avatar, isPrivate, character);
       if (settings) Object.assign(room.settings, settings);
       socket.join(room.code);
       socket.emit("roomCreated", { code: room.code, state: rm.getPublicState(room) });
@@ -56,7 +57,7 @@ function initSockets(io) {
 
     // ── JOIN ROOM ─────────────────────────────────────────────────────────────
     socket.on("joinRoom", ({ code }) => {
-      const result = rm.joinRoom(code, socket.id, userId || socket.id, username, avatar);
+      const result = rm.joinRoom(code, socket.id, userId || socket.id, username, avatar, character);
       if (result.error) return socket.emit("error", result.error);
       socket.join(code);
       socket.emit("roomJoined", { code, state: rm.getPublicState(result.room) });
@@ -67,11 +68,11 @@ function initSockets(io) {
     socket.on("quickMatch", () => {
       let room = rm.findPublicRoom();
       if (!room) {
-        room = rm.createRoom(socket.id, userId || socket.id, username, avatar, false);
+        room = rm.createRoom(socket.id, userId || socket.id, username, avatar, false, character);
         socket.join(room.code);
         socket.emit("roomCreated", { code: room.code, state: rm.getPublicState(room), isQuickMatch: true });
       } else {
-        const result = rm.joinRoom(room.code, socket.id, userId || socket.id, username, avatar);
+        const result = rm.joinRoom(room.code, socket.id, userId || socket.id, username, avatar, character);
         if (result.error) return socket.emit("error", result.error);
         socket.join(room.code);
         socket.emit("roomJoined", { code: room.code, state: rm.getPublicState(room), isQuickMatch: true });
@@ -400,8 +401,18 @@ async function endGame(io, room) {
 
       const xpEarned = calcGameXP(isWin ? "win" : "loss", pStat?.accuracy || 0, bluffs, streak, isMVP, curr?.is_vip);
 
-      // Grant XP + save game history
+      // Grant profile XP
       await grantXP(p.id, xpEarned, curr?.is_vip);
+
+      // Grant season Battle Pass XP
+      const playerRoundHist  = room.roundHistory.filter(r => r.playerId === p.id);
+      const placement        = sorted.findIndex(s => s.playerId === p.id) + 1;
+      const seasonXpEarned   = calcSeasonXP(playerRoundHist, placement);
+      if (seasonXpEarned > 0) {
+        await grantSeasonXP(p.id, seasonXpEarned, curr?.is_vip)
+          .catch(e => console.error("[seasonXP]", e.message));
+      }
+
       await supabaseAdmin.from("game_history").insert({
         user_id: p.id, room_code: room.code,
         result: isWin ? "win" : "loss",

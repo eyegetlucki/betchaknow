@@ -105,4 +105,61 @@ function calcGameXP(result, accuracy, bluffsLanded, streak, mvp, isVIP) {
   return finalXP;
 }
 
-module.exports = { grantXP, calcGameXP, xpForLevel };
+const XP_PER_TIER = 1000;
+const MAX_TIERS   = 40;
+
+/**
+ * Calculate season Battle Pass XP earned from a game:
+ *   +15 XP per correct answer, +25 XP if answer was part of a 3+ streak
+ *   +1000 / +450 / +250 for 1st / 2nd / 3rd place finish
+ */
+function calcSeasonXP(roundHistory, placement) {
+  let xp = 0;
+  for (const rh of roundHistory) {
+    if (!rh.correct) continue;
+    xp += (rh.streakAfter >= 3) ? 25 : 15;
+  }
+  if      (placement === 1) xp += 1000;
+  else if (placement === 2) xp += 450;
+  else if (placement === 3) xp += 250;
+  return xp;
+}
+
+/**
+ * Grant season XP to a player's battle_pass row, advancing tiers as needed.
+ * Creates the row if it doesn't exist yet.
+ */
+async function grantSeasonXP(userId, baseXp, isVIP = false) {
+  const gained = Math.round(isVIP ? baseXp * VIP_MULT : baseXp);
+  if (gained <= 0) return { gained: 0, newTier: 0, tieredUp: false };
+
+  const { data: bp } = await supabaseAdmin
+    .from("battle_pass").select("current_tier, xp")
+    .eq("user_id", userId).eq("season", 1).maybeSingle();
+
+  let currentXP   = (bp?.xp || 0) + gained;
+  let currentTier = bp?.current_tier || 0;
+  let tieredUp    = false;
+
+  while (currentXP >= XP_PER_TIER && currentTier < MAX_TIERS) {
+    currentXP -= XP_PER_TIER;
+    currentTier++;
+    tieredUp = true;
+  }
+
+  if (bp) {
+    await supabaseAdmin.from("battle_pass")
+      .update({ current_tier: currentTier, xp: currentXP })
+      .eq("user_id", userId).eq("season", 1);
+  } else {
+    await supabaseAdmin.from("battle_pass").insert({
+      user_id: userId, season: 1,
+      current_tier: currentTier, xp: currentXP,
+      claimed_free: [], claimed_premium: [],
+    }).catch(() => {});
+  }
+
+  return { gained, newTier: currentTier, tieredUp };
+}
+
+module.exports = { grantXP, calcGameXP, xpForLevel, calcSeasonXP, grantSeasonXP };

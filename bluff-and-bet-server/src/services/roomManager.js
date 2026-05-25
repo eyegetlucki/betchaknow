@@ -19,7 +19,7 @@ const DEFAULT_SETTINGS = {
 };
 
 // ─── CREATE ROOM ──────────────────────────────────────────────────────────────
-function createRoom(hostSocketId, hostId, hostName, hostAvatar = "", isPrivate = true) {
+function createRoom(hostSocketId, hostId, hostName, hostAvatar = "", isPrivate = true, hostCharacter = "") {
   const code = isPrivate
     ? Math.random().toString(36).substring(2, 8).toUpperCase()
     : "QM" + Math.floor(Math.random() * 9000 + 1000);
@@ -40,7 +40,7 @@ function createRoom(hostSocketId, hostId, hostName, hostAvatar = "", isPrivate =
     createdAt: Date.now(),
   };
 
-  const player = createPlayer({ id: hostId, username: hostName, avatar: hostAvatar, color: PLAYER_COLORS[0] });
+  const player = createPlayer({ id: hostId, username: hostName, avatar: hostAvatar, character: hostCharacter, color: PLAYER_COLORS[0] });
   room.players.set(hostId, { ...player, socketId: hostSocketId, isHost: true });
 
   rooms.set(code, room);
@@ -49,7 +49,7 @@ function createRoom(hostSocketId, hostId, hostName, hostAvatar = "", isPrivate =
 }
 
 // ─── JOIN ROOM ────────────────────────────────────────────────────────────────
-function joinRoom(code, socketId, playerId, playerName, playerAvatar = "") {
+function joinRoom(code, socketId, playerId, playerName, playerAvatar = "", playerCharacter = "") {
   const room = rooms.get(code);
   if (!room)                        return { error: "Room not found" };
   if (room.state !== "lobby")       return { error: "Game already in progress" };
@@ -57,7 +57,7 @@ function joinRoom(code, socketId, playerId, playerName, playerAvatar = "") {
   if (room.players.has(playerId))   return { error: "Already in room" };
 
   const color  = PLAYER_COLORS[room.players.size % PLAYER_COLORS.length];
-  const player = createPlayer({ id: playerId, username: playerName, avatar: playerAvatar, color });
+  const player = createPlayer({ id: playerId, username: playerName, avatar: playerAvatar, character: playerCharacter, color });
   room.players.set(playerId, { ...player, socketId, isHost: false });
   socketMap.set(socketId, { roomCode: code, playerId });
   return { success: true, room };
@@ -170,7 +170,7 @@ function addBot(room, difficulty = "medium") {
 // ─── PUBLIC STATE (no cheating) ───────────────────────────────────────────────
 function getPublicState(room, forReveal = false) {
   const players = Array.from(room.players.values()).map(p => ({
-    id: p.id, username: p.username, color: p.color, avatar: p.avatar || null,
+    id: p.id, username: p.username, color: p.color, avatar: p.avatar || null, character: p.character || null,
     points: p.points, streak: p.streak, isHost: p.isHost,
     isBot: p.isBot || false, botDifficulty: p.botDifficulty || null,
     allInUsed: p.allInUsed, isVIP: p.isVIP,

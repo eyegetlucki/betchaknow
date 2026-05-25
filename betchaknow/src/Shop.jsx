@@ -25,6 +25,67 @@ const RARITY = {
   legend: { name: "Legendary", color: C.a2,      glow: C.a2 + "44" },
 };
 
+const CATEGORY_EFFECTS = {
+  avatars: {
+    label: "Character",
+    effect: "Your character stands on the in-game scoreboard next to your name for every player to see. Choose one that matches your playstyle — intimidating, lucky, or just plain cool.",
+    scenes: ["In-game scoreboard", "Lobby player list", "Post-game results"],
+  },
+  themes: {
+    label: "Table Theme",
+    effect: "Transforms the game table's visual style for all players when you host — background, accent colors, and atmosphere. Make your room instantly recognizable.",
+    scenes: ["Game table background", "Room UI accents", "Host lobby"],
+  },
+  cards: {
+    label: "Card Skin",
+    effect: "Reskins your answer cards during gameplay. The card design is visible to every player each time answers are revealed at the end of a round.",
+    scenes: ["Answer cards", "Round reveal", "Bet confirmation"],
+  },
+  fx: {
+    label: "Victory Effect",
+    effect: "A full-screen animation that plays for everyone in the room when you win a round. Turn your victories into a spectacle the whole table can't ignore.",
+    scenes: ["Round win animation", "Final game win"],
+  },
+  packs: {
+    label: "Question Pack",
+    effect: "Adds an entire new trivia category to your games. Select it in host settings alongside or instead of base categories. Each pack includes 500+ curated questions.",
+    scenes: ["Category vote wheel", "Host game settings"],
+  },
+};
+
+const ITEM_PREVIEWS = {
+  av_classic:   "Your starting point — a clean, recognizable look that never goes out of style.",
+  av_shark:     "Instill fear before a question is even asked. The shark circles the leaderboard, waiting for the perfect moment to strike.",
+  av_jester:    "Misdirection is your art. Perfect for the player who lives to bluff and never apologizes for it.",
+  av_crown:     "Command the room. This regal icon signals experience, confidence, and a relentless appetite for first place.",
+  av_diamond:   "Ice in your veins. Diamond Hands players never panic-bet — they hold their nerve and cash out at exactly the right moment.",
+  av_dragon:    "Rare, powerful, and lucky. The dragon avatar is the mark of a true high-stakes legend.",
+  av_phoenix:   "You've been down before and you always come back. Rise from a rough round and take the whole game.",
+  th_neon:      "The classic Betcha Know experience — neon signs, felt tables, and electric Las Vegas energy.",
+  th_space:     "Infinite black with star fields and nebula glow. Bet among the cosmos.",
+  th_tropical:  "Palm trees, ocean breeze, and pastel sunsets. Makes even the toughest question feel breezy.",
+  th_haunted:   "Candlelight, gothic arches, and flickering shadows. High stakes have never felt spookier.",
+  th_cyberpunk: "Rain-slicked streets, holo-billboards, and electric neon. The future of trivia has arrived.",
+  th_golden:    "Champagne, velvet, and gold leaf. The most prestigious table in the house — reserved for high rollers only.",
+  card_default: "Clean, minimal, and timeless — lets your answers speak entirely for themselves.",
+  card_holo:    "Every card shifts through the full rainbow as you reveal it. Light-catching and quietly intimidating.",
+  card_gold:    "Heavy metallic sheen with embossed edges. Feels luxurious every time you play one.",
+  card_neon:    "Electric glowing edges that pulse in the darkened game room. Impossible to miss at the moment of reveal.",
+  card_diamond: "Crystalline facets that catch the light with every play. Sharp, precise, and undeniably stunning.",
+  fx_confetti:  "A burst of colored paper explodes across the screen. Timeless, joyful, and universally satisfying.",
+  fx_money:     "Dollar bills rain down when you win. Let the whole room know it was always about the money.",
+  fx_fireworks: "A full pyrotechnic display launches overhead. Bright, explosive, and impossible to look away from.",
+  fx_lightning: "A bolt cracks across the screen the instant you clinch a win. Fast, electric, devastating.",
+  fx_galaxy:    "The entire universe implodes into a supernova. The most dramatic victory effect in the game — by far.",
+  qp_classic:   "The seven pillars of Betcha Know: Sports, Science, History, Pop Culture, Geography, Music, and Movies.",
+  qp_games:     "500+ questions spanning video game history — from Atari to modern releases, studios, speedruns, and lore.",
+  qp_anime:     "Deep cuts from manga, anime series, studios, directors, and seasonal hits across every decade.",
+  qp_food:      "Culinary trivia covering world cuisines, cooking techniques, famous chefs, and food history.",
+  qp_crime:     "Famous cases, forensic science, cold files, documentary subjects, and criminal psychology.",
+  qp_nostalgia: "A time capsule of the 2000s — TV shows, movies, music, slang, gadgets, and early internet culture.",
+  qp_legends:   "Legendary athletes, record-breaking moments, championship history, and the stories behind the stats.",
+};
+
 const PLAYER_DATA = {
   bluffBucks: 1340,
   ownedIds: ["av_classic", "th_neon", "fx_confetti", "card_default", "qp_classic"],
@@ -71,12 +132,12 @@ const ITEMS = [
 ];
 
 const CATEGORIES = [
-  { id:"featured", label:"⭐ Featured",        short:"Featured" },
-  { id:"avatars",  label:"🧑 Avatars",         short:"Avatars"  },
-  { id:"themes",   label:"🎨 Themes",          short:"Themes"   },
-  { id:"cards",    label:"🃏 Card Skins",      short:"Cards"    },
-  { id:"fx",       label:"✨ Victory Effects", short:"FX"       },
-  { id:"packs",    label:"📚 Question Packs",  short:"Packs"    },
+  { id:"featured", label:"⭐ Featured",        short:"Featured"  },
+  { id:"avatars",  label:"🧑 Characters",      short:"Characters"},
+  { id:"themes",   label:"🎨 Themes",          short:"Themes"    },
+  { id:"cards",    label:"🃏 Card Skins",      short:"Cards"     },
+  { id:"fx",       label:"✨ Victory Effects", short:"FX"        },
+  { id:"packs",    label:"📚 Question Packs",  short:"Packs"     },
 ];
 
 const COIN_PACKS = [
@@ -159,6 +220,16 @@ const css = `
     opacity:0.3;
   }
 
+  .preview-btn {
+    width:100%; padding:7px; border-radius:8px;
+    border:1px solid ${C.border2}; background:transparent;
+    color:${C.muted}; cursor:pointer;
+    font-family:'DM Sans',sans-serif; font-weight:700; font-size:11px;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+    margin-bottom:8px; transition:color 0.15s, background 0.15s;
+  }
+  .preview-btn:hover { color:${C.text}; background:${C.border}; }
+
   button:not(:disabled):active { transform:scale(0.97); }
 `;
 
@@ -189,7 +260,7 @@ function CoinIcon({ size = 14 }) {
   );
 }
 
-function ItemCard({ item, owned, equipped, balance, onClick }) {
+function ItemCard({ item, owned, equipped, balance, onClick, onPreview }) {
   const r = RARITY[item.rarity];
   const affordable = balance >= item.price;
 
@@ -224,9 +295,13 @@ function ItemCard({ item, owned, equipped, balance, onClick }) {
         <RarityBadge rarity={item.rarity} />
 
         <h4 style={{ fontWeight:800, fontSize:14, color:C.text, marginTop:6, marginBottom:2 }}>{item.name}</h4>
-        <p style={{ fontSize:11, color:C.muted, fontFamily:"'DM Sans',sans-serif", lineHeight:1.4, marginBottom:10, minHeight:30 }}>
+        <p style={{ fontSize:11, color:C.muted, fontFamily:"'DM Sans',sans-serif", lineHeight:1.4, marginBottom:8, minHeight:30 }}>
           {item.desc}
         </p>
+
+        <button className="preview-btn" onClick={(e) => { e.stopPropagation(); onPreview(item); }}>
+          👁 Preview Details
+        </button>
 
         {item.price === 0 ? (
           <div style={{ textAlign:"center", color:C.muted, fontSize:12, fontWeight:700, padding:"8px" }}>DEFAULT</div>
@@ -417,6 +492,168 @@ function CoinPackModal({ pack, onConfirm, onCancel }) {
   );
 }
 
+function PreviewModal({ item, owned, equipped, balance, onAction, onClose }) {
+  if (!item) return null;
+  const r   = RARITY[item.rarity];
+  const cat = CATEGORY_EFFECTS[item.cat];
+  const flavor = ITEM_PREVIEWS[item.id];
+  const affordable = balance >= item.price;
+
+  const slotMap = { avatars:"avatar", themes:"theme", cards:"cards", fx:"fx" };
+  const isEquipped = equipped && equipped[slotMap[item.cat]] === item.id;
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: C.card,
+        border: `2px solid ${r.color}55`,
+        borderRadius: 24,
+        padding: "32px 28px 24px",
+        maxWidth: 480,
+        width: "100%",
+        animation: "popIn 0.3s cubic-bezier(.17,.67,.35,1.15)",
+        boxShadow: `0 0 60px ${r.glow}, 0 24px 80px #000c`,
+        position: "relative",
+        overflow: "hidden",
+        maxHeight: "90vh",
+        overflowY: "auto",
+      }}>
+        {/* Radial background glow */}
+        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 50% 0%, ${r.color}18, transparent 55%)`, pointerEvents:"none" }} />
+
+        {/* Close button */}
+        <button onClick={onClose} style={{
+          position:"absolute", top:16, right:16,
+          width:32, height:32, borderRadius:"50%",
+          border:`1px solid ${C.border2}`,
+          background:C.card2, color:C.muted, fontSize:16, cursor:"pointer",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontFamily:"'DM Sans',sans-serif", fontWeight:900, zIndex:2,
+        }}>✕</button>
+
+        <div style={{ position:"relative", zIndex:1 }}>
+          {/* Icon */}
+          <div style={{ textAlign:"center", marginBottom:20 }}>
+            <div style={{
+              width:100, height:100, margin:"0 auto 16px",
+              borderRadius:24,
+              background: `linear-gradient(135deg, ${r.color}33, ${r.color}11)`,
+              border: `2px solid ${r.color}66`,
+              display:"flex", alignItems:"center", justifyContent:"center",
+              fontSize:52,
+              animation:"float 3s ease-in-out infinite",
+              boxShadow:`0 0 40px ${r.glow}, inset 0 0 20px ${r.color}11`,
+            }}>{item.icon}</div>
+
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:10 }}>
+              {cat && (
+                <span style={{
+                  background:C.border, color:C.muted,
+                  borderRadius:20, padding:"3px 10px",
+                  fontSize:10, fontWeight:800, letterSpacing:0.5, textTransform:"uppercase",
+                }}>{cat.label}</span>
+              )}
+              <RarityBadge rarity={item.rarity} />
+            </div>
+
+            <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:32, color:C.text, lineHeight:1 }}>{item.name}</h2>
+          </div>
+
+          {/* What this unlocks */}
+          {cat && (
+            <div style={{ background:C.card2, border:`1px solid ${C.border}`, borderRadius:14, padding:"14px 16px", marginBottom:14 }}>
+              <div style={{ fontSize:10, color:r.color, fontWeight:900, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>
+                ✦ What This Unlocks
+              </div>
+              <p style={{ fontSize:13, color:C.text, fontWeight:500, lineHeight:1.65, marginBottom:cat.scenes?.length ? 12 : 0 }}>
+                {cat.effect}
+              </p>
+              {cat.scenes?.length > 0 && (
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  {cat.scenes.map((s, i) => (
+                    <span key={i} style={{
+                      background: r.color + "18", color: r.color,
+                      border: `1px solid ${r.color}33`,
+                      borderRadius:20, padding:"3px 10px",
+                      fontSize:10, fontWeight:700,
+                    }}>{s}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Flavor text */}
+          {flavor && (
+            <div style={{
+              borderLeft:`3px solid ${r.color}66`,
+              paddingLeft:14, marginBottom:16,
+            }}>
+              <p style={{ fontSize:13, color:C.muted, fontWeight:500, lineHeight:1.65, fontStyle:"italic" }}>
+                "{flavor}"
+              </p>
+            </div>
+          )}
+
+          {/* Price / ownership */}
+          <div style={{
+            display:"flex", justifyContent:"space-between", alignItems:"center",
+            background:C.card2, border:`1px solid ${C.border}`,
+            borderRadius:12, padding:"12px 16px", marginBottom:16,
+          }}>
+            {item.price === 0 ? (
+              <span style={{ color:C.muted, fontSize:13, fontWeight:700 }}>Free — included by default</span>
+            ) : owned ? (
+              <span style={{ color:C.a3, fontSize:13, fontWeight:800 }}>✓ Owned</span>
+            ) : (
+              <>
+                <span style={{ color:C.muted, fontSize:13, fontWeight:600 }}>Price</span>
+                <span style={{ display:"flex", alignItems:"center", gap:6 }}>
+                  <span style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color: affordable ? C.a2 : C.a1, display:"flex", alignItems:"center", gap:6 }}>
+                    <CoinIcon size={16} /> {item.price.toLocaleString()}
+                  </span>
+                  {!affordable && (
+                    <span style={{ fontSize:11, color:C.a1, fontWeight:700 }}>· not enough coins</span>
+                  )}
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display:"flex", gap:10 }}>
+            <button className="btn-primary" onClick={onClose}
+              style={{ background:"transparent", color:C.muted, border:`1.5px solid ${C.border2}`, padding:"12px", flex:1 }}>
+              Close
+            </button>
+
+            {item.price > 0 && !owned ? (
+              <button className="btn-primary" disabled={!affordable} onClick={() => onAction(item)}
+                style={{
+                  flex:2, padding:"12px", fontSize:14,
+                  background: affordable ? `linear-gradient(135deg, ${r.color}, ${r.color}cc)` : C.border,
+                  color: affordable ? "#fff" : C.muted,
+                }}>
+                {affordable ? `Buy — ${item.price.toLocaleString()} BK` : "Need More Coins"}
+              </button>
+            ) : owned && !isEquipped && item.cat !== "packs" ? (
+              <button className="btn-primary" onClick={() => onAction(item)}
+                style={{ flex:2, padding:"12px", fontSize:14, background:C.a3+"22", color:C.a3, border:`1px solid ${C.a3}55` }}>
+                Equip Now
+              </button>
+            ) : isEquipped ? (
+              <button className="btn-primary" disabled
+                style={{ flex:2, padding:"12px", fontSize:14, background:C.a3+"22", color:C.a3, border:`1px solid ${C.a3}55` }}>
+                ✓ Currently Equipped
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Toast({ msg, type="success" }) {
   if (!msg) return null;
   const colors = {
@@ -444,15 +681,16 @@ function Toast({ msg, type="success" }) {
 const FREE_ITEM_IDS = PLAYER_DATA.ownedIds;
 
 export default function ShopPage() {
-  const [view,      setView]      = useState("shop");
-  const [cat,       setCat]       = useState("featured");
-  const [balance,   setBalance]   = useState(null);
-  const [owned,     setOwned]     = useState(new Set(FREE_ITEM_IDS));
-  const [equipped,  setEquipped]  = useState({});
-  const [loading,   setLoading]   = useState(isLoggedIn());
-  const [modalItem, setModalItem] = useState(null);
-  const [modalPack, setModalPack] = useState(null);
-  const [toast,     setToast]     = useState(null);
+  const [view,        setView]        = useState("shop");
+  const [cat,         setCat]         = useState("featured");
+  const [balance,     setBalance]     = useState(null);
+  const [owned,       setOwned]       = useState(new Set(FREE_ITEM_IDS));
+  const [equipped,    setEquipped]    = useState({});
+  const [loading,     setLoading]     = useState(isLoggedIn());
+  const [modalItem,   setModalItem]   = useState(null);
+  const [modalPack,   setModalPack]   = useState(null);
+  const [previewItem, setPreviewItem] = useState(null);
+  const [toast,       setToast]       = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -496,13 +734,19 @@ export default function ShopPage() {
       if (!slot) return;
       if (equipped[slot] === item.id) { showToast(`${item.name} is already equipped`, "info"); return; }
       setEquipped(prev => ({ ...prev, [slot]: item.id }));
-      if (slot === "theme") localStorage.setItem("bk_equipped_theme", item.id);
-      if (slot === "fx")    localStorage.setItem("bk_equipped_fx",    item.id);
+      if (slot === "theme")  localStorage.setItem("bk_equipped_theme",     item.id);
+      if (slot === "fx")     localStorage.setItem("bk_equipped_fx",        item.id);
+      if (slot === "avatar") localStorage.setItem("bk_equipped_character", item.icon);
       if (isLoggedIn()) api.equip({ slot, itemId: item.id }).catch(() => {});
       showToast(`Equipped ${item.name}!`);
     } else {
       setModalItem(item);
     }
+  };
+
+  const handlePreviewAction = (item) => {
+    setPreviewItem(null);
+    handleItemClick(item);
   };
 
   const handleConfirmPurchase = async (item) => {
@@ -635,7 +879,7 @@ export default function ShopPage() {
 
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:14 }}>
               {filtered.map(item => (
-                <ItemCard key={item.id} item={item} owned={owned.has(item.id)} equipped={isEquipped(item)} balance={balance ?? 0} onClick={handleItemClick} />
+                <ItemCard key={item.id} item={item} owned={owned.has(item.id)} equipped={isEquipped(item)} balance={balance ?? 0} onClick={handleItemClick} onPreview={setPreviewItem} />
               ))}
             </div>
 
@@ -672,7 +916,7 @@ export default function ShopPage() {
               <h3 style={{ fontSize:12, color:C.a3, fontWeight:800, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>✓ Currently Equipped</h3>
               <div style={{ display:"flex", gap:14, flexWrap:"wrap" }}>
                 {[
-                  { slot:"avatar", label:"Avatar"  },
+                  { slot:"avatar", label:"Character"},
                   { slot:"theme",  label:"Theme"   },
                   { slot:"cards",  label:"Cards"   },
                   { slot:"fx",     label:"Victory" },
@@ -708,7 +952,7 @@ export default function ShopPage() {
                   </h3>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(180px, 1fr))", gap:12 }}>
                     {items.map(item => (
-                      <ItemCard key={item.id} item={item} owned={true} equipped={isEquipped(item)} balance={balance ?? 0} onClick={handleItemClick} />
+                      <ItemCard key={item.id} item={item} owned={true} equipped={isEquipped(item)} balance={balance ?? 0} onClick={handleItemClick} onPreview={setPreviewItem} />
                     ))}
                   </div>
                 </div>
@@ -754,6 +998,7 @@ export default function ShopPage() {
         )}
       </div>
 
+      <PreviewModal item={previewItem} owned={previewItem ? owned.has(previewItem.id) : false} equipped={equipped} balance={balance ?? 0} onAction={handlePreviewAction} onClose={() => setPreviewItem(null)} />
       <PurchaseModal item={modalItem} balance={balance ?? 0} onConfirm={handleConfirmPurchase} onCancel={() => setModalItem(null)} />
       <CoinPackModal pack={modalPack} onConfirm={handleConfirmCoins} onCancel={() => setModalPack(null)} />
     </div>

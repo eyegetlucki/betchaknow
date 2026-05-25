@@ -148,6 +148,23 @@ function PlayerAvatar({ name, color, avatar, size = 32, radius = "50%", fontSize
   );
 }
 
+// Renders the player's equipped shop character emoji
+function CharacterBadge({ character, color, size = 28, animate = false }) {
+  if (!character) return null;
+  return (
+    <span style={{
+      fontSize: size,
+      lineHeight: 1,
+      display: "inline-flex",
+      alignItems: "flex-end",
+      flexShrink: 0,
+      filter: `drop-shadow(0 2px 5px ${color}88)`,
+      animation: animate ? "float 3s ease-in-out infinite" : "none",
+      userSelect: "none",
+    }}>{character}</span>
+  );
+}
+
 function ScorePill({ player, showDelta, delta }) {
   return (
     <div style={{
@@ -266,6 +283,7 @@ function BlindBetScreen({ players, myPlayer, round, totalRounds, timerSecs, cate
             }}>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={24} />
+                {p.character && <CharacterBadge character={p.character} color={p.color} size={18} />}
                 <span style={{ color:C.text, fontWeight:700, fontSize:13 }}>{p.name}{p.isMe ? " (you)" : ""}</span>
               </div>
               <span style={{ fontSize:12, fontWeight:800, color: p.hasBet || p.isMe ? C.accent3 : C.muted }}>
@@ -718,6 +736,7 @@ function RevealScreen({ question, players, round, totalRounds }) {
               }}>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                   <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={30} />
+                  {p.character && <CharacterBadge character={p.character} color={p.color} size={22} />}
                   <div>
                     <div style={{ color:C.text, fontWeight:800, fontSize:14 }}>{p.name}</div>
                     <div style={{ color:C.muted, fontSize:11 }}>
@@ -810,6 +829,7 @@ function EndScreen({ players, onPlayAgain, onExit }) {
                 color:["🥇","🥈","🥉"][i] ? C.accent2 : C.muted, width:28,
               }}>{["🥇","🥈","🥉"][i] || `#${i+1}`}</div>
               <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={32} />
+              {p.character && <CharacterBadge character={p.character} color={p.color} size={26} />}
               <div>
                 <div style={{ color:C.text, fontWeight:800, fontSize:15 }}>{p.name}</div>
                 <div style={{ color:C.muted, fontSize:11 }}>
@@ -985,6 +1005,59 @@ function VictoryFX() {
   );
 }
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(window.innerWidth < 640);
+  useEffect(() => {
+    const handler = () => setMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return mobile;
+}
+
+function MobileScoreboard({ players }) {
+  const sorted = [...players].sort((a, b) => b.points - a.points);
+  return (
+    <div style={{
+      position:"sticky", top:0, zIndex:10,
+      background:"#0e0c1acc", backdropFilter:"blur(10px)",
+      borderBottom:`1px solid ${C.cardBorder}`,
+      padding:"8px 12px",
+      display:"flex", gap:8, overflowX:"auto",
+      justifyContent:"center",
+      WebkitOverflowScrolling:"touch",
+    }}>
+      {sorted.map((p, rank) => (
+        <div key={p.id} style={{
+          display:"flex", flexDirection:"column", alignItems:"center",
+          gap:2, padding:"6px 10px", borderRadius:12, flexShrink:0,
+          background: p.isMe ? p.color+"22" : "#ffffff0a",
+          border:`1px solid ${p.isMe ? p.color+"55" : "#ffffff10"}`,
+          minWidth:64,
+        }}>
+          <div style={{ fontSize:8, color:["🥇","🥈","🥉"][rank] ? C.accent2 : C.muted, fontWeight:800 }}>
+            {["🥇","🥈","🥉"][rank] || `#${rank+1}`}
+          </div>
+          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"center", gap:3 }}>
+            {p.character
+              ? <CharacterBadge character={p.character} color={p.color} size={26} animate={p.isMe} />
+              : <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={26} />
+            }
+            {p.character && <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={14} />}
+          </div>
+          <div style={{ fontSize:9, fontWeight:800, color: p.isMe ? C.text : C.muted, maxWidth:58, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+            {p.name}
+          </div>
+          <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:13, color:C.accent2 }}>
+            {p.points}
+          </div>
+          {p.streak >= 3 && <span style={{fontSize:8}}>🔥×{p.streak}</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function GameFlow({ onExit, initialRoundData }) {
   // ── state ──────────────────────────────────────────────────────────────────
   const [phase,         setPhase]         = useState("lobby");
@@ -1145,7 +1218,8 @@ export default function GameFlow({ onExit, initialRoundData }) {
     { width:38,  height:38,  background:C.accent3, top:"48%", left:"1%" },
   ];
 
-  const inGame = phase !== "end" && phase !== "lobby";
+  const inGame  = phase !== "end" && phase !== "lobby";
+  const isMobile = useIsMobile();
 
   return (
     <div style={{ minHeight:"100vh", background:C.bg, position:"relative", overflow:"hidden", fontFamily:"'Nunito',sans-serif" }}>
@@ -1165,27 +1239,30 @@ export default function GameFlow({ onExit, initialRoundData }) {
         >✕ Leave</button>
       )}
 
-      <div style={{ display:"flex", minHeight:"100vh" }}>
-        {inGame && (
+      <div style={{ display:"flex", flexDirection: isMobile ? "column" : "row", minHeight:"100vh" }}>
+        {inGame && isMobile && <MobileScoreboard players={players} />}
+        {inGame && !isMobile && (
           <div style={{
-            width:120, flexShrink:0,
+            width:130, flexShrink:0,
             background:"#0e0c1a", borderRight:`1px solid ${C.cardBorder}`,
-            display:"flex", flexDirection:"column", gap:8,
+            display:"flex", flexDirection:"column", gap:6,
             padding:"12px 8px", overflowY:"auto",
           }}>
-            <div style={{ color:C.muted, fontSize:9, fontWeight:800, letterSpacing:1, textTransform:"uppercase", textAlign:"center", marginBottom:2 }}>
-              Standings
-            </div>
             {[...players].sort((a,b) => b.points - a.points).map((p, rank) => (
               <div key={p.id} style={{
                 display:"flex", flexDirection:"column", alignItems:"center",
-                gap:3, padding:"8px 4px", borderRadius:12,
-                background: p.isMe ? p.color+"22" : "#ffffff08",
-                border:`1px solid ${p.isMe ? p.color+"55" : "#ffffff0a"}`,
+                gap:3, padding:"8px 6px", borderRadius:12,
+                background: p.isMe ? p.color+"22" : "#ffffff0a",
+                border:`1px solid ${p.isMe ? p.color+"44" : "transparent"}`,
               }}>
-                <div style={{ fontSize:9, color:C.muted, fontWeight:800 }}>#{rank+1}</div>
-                <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={40} radius="10px" fontSize={17} />
-                <div style={{ fontSize:10, fontWeight:800, color: p.isMe ? C.text : C.muted, textAlign:"center", lineHeight:1.2 }}>
+                <div style={{ fontSize:9, color:C.muted, fontWeight:800 }}>
+                  {["🥇","🥈","🥉"][rank] || `#${rank+1}`}
+                </div>
+                <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"center", gap:3 }}>
+                  <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={36} />
+                  {p.character && <CharacterBadge character={p.character} color={p.color} size={22} animate={p.isMe} />}
+                </div>
+                <div style={{ fontSize:10, fontWeight:800, color: p.isMe ? C.text : C.muted, maxWidth:100, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", textAlign:"center" }}>
                   {p.name}
                 </div>
                 <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:14, color:C.accent2 }}>
@@ -1196,8 +1273,7 @@ export default function GameFlow({ onExit, initialRoundData }) {
             ))}
           </div>
         )}
-
-        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding: isMobile ? "16px 12px" : 20 }}>
           <Card style={{ width:"100%", maxWidth:520 }}>
             {/* ── Lobby waiting room ─────────────────────────────────── */}
             {phase === "lobby" && (
@@ -1231,6 +1307,7 @@ export default function GameFlow({ onExit, initialRoundData }) {
                       borderRadius:12, padding:"10px 14px",
                     }}>
                       <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={32} />
+                      {p.character && <CharacterBadge character={p.character} color={p.color} size={22} />}
                       <span style={{ fontWeight:800, color:C.text, fontSize:14 }}>{p.name}</span>
                       {p.isHost && <span style={{ marginLeft:"auto", fontSize:11, color:C.accent2, fontWeight:800 }}>HOST</span>}
                       {p.isMe  && <span style={{ marginLeft: p.isHost ? 4 : "auto", fontSize:11, color:C.accent4, fontWeight:800 }}>YOU</span>}
