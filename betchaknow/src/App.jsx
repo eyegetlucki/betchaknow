@@ -11,6 +11,70 @@ import BattlePassPage from './BattlePass';
 import { isLoggedIn, api, saveSession, clearSession } from './api';
 import { supabase } from './supabaseClient';
 
+const TRACKS = [
+  encodeURI("/music/ES_intuition (Instrumental Version) - dasloe.mp3"),
+  encodeURI("/music/ES_Kids World - Lukas Got Lucky.mp3"),
+];
+
+function useMusicPlayer(enabled, volume) {
+  const audioRef    = useRef(null);
+  const trackRef    = useRef(0);
+  const unlockedRef = useRef(false);
+
+  // Create audio element once
+  useEffect(() => {
+    const audio = new Audio(TRACKS[0]);
+    audio.volume  = volume / 100;
+    audio.preload = "auto";
+
+    const onEnded = () => {
+      trackRef.current = (trackRef.current + 1) % TRACKS.length;
+      audio.src = TRACKS[trackRef.current];
+      if (unlockedRef.current) audio.play().catch(() => {});
+    };
+    audio.addEventListener("ended", onEnded);
+    audioRef.current = audio;
+
+    return () => {
+      audio.removeEventListener("ended", onEnded);
+      audio.pause();
+      audio.src = "";
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Play / pause when enabled changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (enabled) {
+      if (unlockedRef.current) {
+        audio.play().catch(() => {});
+      } else {
+        const unlock = () => {
+          unlockedRef.current = true;
+          audioRef.current?.play().catch(() => {});
+        };
+        document.addEventListener("click",      unlock, { once: true });
+        document.addEventListener("keydown",    unlock, { once: true });
+        document.addEventListener("touchstart", unlock, { once: true });
+        return () => {
+          document.removeEventListener("click",      unlock);
+          document.removeEventListener("keydown",    unlock);
+          document.removeEventListener("touchstart", unlock);
+        };
+      }
+    } else {
+      audio.pause();
+    }
+  }, [enabled]);
+
+  // Sync volume
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume / 100;
+  }, [volume]);
+}
+
 const NAV_ITEMS = [
   { id:"lobby",       icon:"🎯", label:"Play"    },
   { id:"leaderboard", icon:"🏆", label:"Ranks"   },
@@ -454,6 +518,8 @@ export default function App() {
     animationsEnabled: localStorage.getItem("bk_animations")  !== "0",
     showPointsDelta:   localStorage.getItem("bk_pts_delta")   !== "0",
   }));
+
+  useMusicPlayer(settings.musicEnabled, settings.musicVolume);
 
   const updateSetting = (key, value) => {
     setSettings(s => ({ ...s, [key]: value }));
