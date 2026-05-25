@@ -6,7 +6,8 @@ const config = require("../config");
 const rm     = require("../services/roomManager");
 const { buildQuestionSet } = require("../services/questionService");
 const { getRandomPowerUp, applyPowerUp, resetPlayerRound } = require("../services/gameLogic");
-const { grantXP, calcGameXP, calcSeasonXP, grantSeasonXP } = require("../services/xpService");
+const { grantXP, calcGameXP, calcSeasonXP, grantSeasonXP, grantClubXP } = require("../services/xpService");
+const { updateChallengeProgress } = require("../services/challengeService");
 const { supabaseAdmin } = require("../db/supabase");
 
 // Helper: emit only to room, respecting anonymous bet setting
@@ -41,7 +42,9 @@ function initSockets(io) {
 
   io.on("connection", (socket) => {
     const userId    = socket.user?.id;
-    const username  = socket.user?.username || `Guest_${socket.id.slice(0, 6)}`;
+    const username  = socket.user?.username
+      || socket.handshake.auth?.username
+      || `Guest_${socket.id.slice(0, 6)}`;
     const avatar    = socket.handshake.auth?.avatar    || "";
     const character = socket.handshake.auth?.character || "";
 
@@ -481,6 +484,24 @@ async function endGame(io, room) {
           console.error("[mastery]", me.message);
         }
       }
+
+      // Grant club XP — 150 per completed game, only for players who finished
+      await grantClubXP(p.id).catch(e => console.error("[clubXP]", e.message));
+
+      // Update challenge progress
+      const playerRoundHist2 = room.roundHistory.filter(r => r.playerId === p.id);
+      const correctAnswers   = playerRoundHist2.filter(r => r.correct).length;
+      const gameEvents = {
+        won:          isWin,
+        firstPlace:   placement === 1,
+        topThree:     placement <= 3,
+        correctAnswers,
+        bluffsLanded: bluffs,
+        maxStreak:    streak,
+        accuracy:     pStat?.accuracy || 0,
+      };
+      await updateChallengeProgress(p.id, gameEvents, supabaseAdmin)
+        .catch(e => console.error("[challengeProgress]", e.message));
 
     } catch (err) {
       console.error("[endGame] stat persist error:", err.message);

@@ -3,6 +3,7 @@ const router = require("express").Router();
 const { requireAuth } = require("../middleware/auth");
 const { asyncHandler, createError } = require("../middleware/errorHandler");
 const { supabaseAdmin } = require("../db/supabase");
+const { clubXpForLevel } = require("../services/xpService");
 
 // GET /api/clubs — list public clubs
 router.get("/", asyncHandler(async (req, res) => {
@@ -30,12 +31,17 @@ router.get("/mine", requireAuth, asyncHandler(async (req, res) => {
     .eq("club_id", membership.club_id)
     .order("weekly_xp", { ascending: false });
 
-  res.json({ club, members: members || [], myRole: membership.role });
+  // Compute XP threshold for current level so frontend can draw the progress bar
+  const level      = club?.level || 1;
+  const xpForLevel = clubXpForLevel(level);
+  const enriched   = club ? { ...club, xp_to_next: club.xp || 0, xp_for_level: xpForLevel } : null;
+
+  res.json({ club: enriched, members: members || [], myRole: membership.role });
 }));
 
 // POST /api/clubs — create a club
 router.post("/", requireAuth, asyncHandler(async (req, res) => {
-  const { name, tag, icon, description } = req.body;
+  const { name, tag, icon, description, banner, privacy, min_level, vibe, language } = req.body;
   if (!name || name.length < 3) throw createError(400, "Club name must be at least 3 chars");
   if (!tag  || tag.length < 2)  throw createError(400, "Tag must be at least 2 chars");
 
@@ -44,9 +50,21 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
     .from("club_members").select("id").eq("user_id", req.user.id).maybeSingle();
   if (existing) throw createError(409, "Already in a club — leave first");
 
+  // is_public: open = anyone can join; apply/invite = not freely joinable
+  const isPublic = !privacy || privacy === "open";
+
   const { data: club, error } = await supabaseAdmin.from("clubs").insert({
-    name, tag: tag.toUpperCase().slice(0,6),
-    icon: icon || "🏆", description, owner_id: req.user.id,
+    name,
+    tag:         tag.toUpperCase().slice(0, 6),
+    icon:        icon        || "🏆",
+    description: description || null,
+    banner_style: banner     || null,   // stores the CSS gradient string
+    is_public:   isPublic,
+    owner_id:    req.user.id,
+    // Optional columns — inserted only if present (ignored if column doesn't exist yet)
+    ...(vibe      ? { vibe }      : {}),
+    ...(min_level ? { min_level } : {}),
+    ...(language  ? { language }  : {}),
   }).select().single();
   if (error) {
     if (error.code === "23505") throw createError(409, "Club name or tag already taken");
@@ -82,6 +100,53 @@ router.post("/leave", requireAuth, asyncHandler(async (req, res) => {
   await supabaseAdmin.from("club_members")
     .delete().eq("user_id", req.user.id);
   res.json({ message: "Left club" });
+}));
+
+// PATCH /api/clubs/:clubId/members/:memberId/role — promote/demote (captain only)
+router.patch("/:clubId/members/:memberId/role", requireAuth, asyncHandler(async (req, res) => {
+  const { role } = req.body;
+  if (!["moderator", "member"].includes(role)) throw createError(400, "Role must be moderator or member");
+
+  const { data: requester } = await supabaseAdmin
+    .from("club_members").select("role")
+    .eq("club_id", req.params.clubId).eq("user_id", req.user.id).single();
+  if (!requester || requester.role !== "captain") throw createError(403, "Only the captain can change roles");
+  if (req.params.memberId === req.user.id)        throw createError(400, "Cannot change your own role");
+
+  const { data: target } = await supabaseAdmin
+    .from("club_members").select("role")
+    .eq("club_id", req.params.clubId).eq("user_id", req.params.memberId).single();
+  if (!target)                   throw createError(404, "Member not found");
+  if (target.role === "captain") throw createError(403, "Cannot change the captain's role");
+
+  await supabaseAdmin.from("club_members")
+    .update({ role })
+    .eq("club_id", req.params.clubId).eq("user_id", req.params.memberId);
+
+  res.json({ message: "Role updated" });
+}));
+
+// DELETE /api/clubs/:clubId/members/:memberId — kick a member
+router.delete("/:clubId/members/:memberId", requireAuth, asyncHandler(async (req, res) => {
+  const { data: requester } = await supabaseAdmin
+    .from("club_members").select("role")
+    .eq("club_id", req.params.clubId).eq("user_id", req.user.id).single();
+  if (!requester || !["captain", "moderator"].includes(requester.role))
+    throw createError(403, "Insufficient permissions");
+
+  const { data: target } = await supabaseAdmin
+    .from("club_members").select("role")
+    .eq("club_id", req.params.clubId).eq("user_id", req.params.memberId).single();
+  if (!target)                    throw createError(404, "Member not found");
+  if (target.role === "captain")  throw createError(403, "Cannot kick the captain");
+  if (requester.role === "moderator" && target.role === "moderator")
+    throw createError(403, "Moderators cannot kick other moderators");
+
+  await supabaseAdmin.from("club_members")
+    .delete()
+    .eq("club_id", req.params.clubId).eq("user_id", req.params.memberId);
+
+  res.json({ message: "Member kicked" });
 }));
 
 // GET /api/clubs/:clubId/chat

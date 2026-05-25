@@ -162,4 +162,100 @@ async function grantSeasonXP(userId, baseXp, isVIP = false) {
   return { gained, newTier: currentTier, tieredUp };
 }
 
-module.exports = { grantXP, calcGameXP, xpForLevel, calcSeasonXP, grantSeasonXP };
+// ─── Club XP ─────────────────────────────────────────────────────────────────
+
+const CLUB_XP_PER_GAME = 150;
+
+function clubXpForLevel(level) {
+  // XP needed to advance from `level` to `level + 1`
+  return Math.floor(3000 + (level - 1) * 500);
+}
+
+// Items granted to ALL current club members when the club reaches this level
+const CLUB_LEVEL_REWARDS = {
+  10: { items: ["av_phoenix"],    label: "Club Avatar Pack — av_phoenix unlocked!" },
+  15: { items: ["card_diamond"],  label: "Exclusive Club Card Skin — Diamond Cards unlocked!" },
+  25: { items: ["fx_galaxy"],     label: "Animated Club Banner — Galaxy FX unlocked!" },
+};
+
+/**
+ * Award 150 club XP to a player's club after they complete a game.
+ * Also handles club level-ups and distributes tangible rewards.
+ */
+async function grantClubXP(userId) {
+  try {
+    const { data: membership } = await supabaseAdmin
+      .from("club_members")
+      .select("club_id, weekly_xp")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!membership) return null;
+
+    const clubId = membership.club_id;
+
+    // Increment this member's weekly contribution
+    await supabaseAdmin
+      .from("club_members")
+      .update({ weekly_xp: (membership.weekly_xp || 0) + CLUB_XP_PER_GAME })
+      .eq("club_id", clubId)
+      .eq("user_id", userId);
+
+    // Fetch current club state (xp = XP within current level)
+    const { data: club } = await supabaseAdmin
+      .from("clubs")
+      .select("xp, level, weekly_xp")
+      .eq("id", clubId)
+      .single();
+
+    if (!club) return null;
+
+    let currentXP    = (club.xp    || 0) + CLUB_XP_PER_GAME;
+    let currentLevel = (club.level || 1);
+    const leveledUpTo = [];
+
+    // Handle multiple level-ups
+    while (currentXP >= clubXpForLevel(currentLevel)) {
+      currentXP -= clubXpForLevel(currentLevel);
+      currentLevel++;
+      leveledUpTo.push(currentLevel);
+    }
+
+    await supabaseAdmin
+      .from("clubs")
+      .update({
+        xp:        currentXP,
+        level:     currentLevel,
+        weekly_xp: (club.weekly_xp || 0) + CLUB_XP_PER_GAME,
+      })
+      .eq("id", clubId);
+
+    // Distribute item rewards to all current members on level-up
+    for (const lvl of leveledUpTo) {
+      const reward = CLUB_LEVEL_REWARDS[lvl];
+      if (!reward?.items?.length) continue;
+
+      const { data: members } = await supabaseAdmin
+        .from("club_members")
+        .select("user_id")
+        .eq("club_id", clubId);
+
+      for (const m of (members || [])) {
+        for (const itemId of reward.items) {
+          await supabaseAdmin.from("inventory").upsert(
+            { user_id: m.user_id, item_id: itemId, item_type: "cosmetic" },
+            { onConflict: "user_id,item_id", ignoreDuplicates: true }
+          ).catch(() => {});
+        }
+      }
+      console.log(`[club] ${clubId} reached level ${lvl} — ${reward.label}`);
+    }
+
+    return { clubId, leveledUpTo };
+  } catch (e) {
+    console.error("[grantClubXP]", e.message);
+    return null;
+  }
+}
+
+module.exports = { grantXP, calcGameXP, xpForLevel, calcSeasonXP, grantSeasonXP, grantClubXP, clubXpForLevel };

@@ -139,11 +139,13 @@ router.post("/oauth", asyncHandler(async (req, res) => {
   if (error || !data.user) throw createError(401, "Invalid OAuth token");
 
   const userId = data.user.id;
+  // Supabase stores Google photo as "picture", Discord/others as "avatar_url"
+  const oauthPhoto = data.user.user_metadata?.picture || data.user.user_metadata?.avatar_url || null;
 
   // Check if profile exists; create if first OAuth login
   const { data: existing } = await supabaseAdmin
     .from("profiles")
-    .select("id, username")
+    .select("id, username, avatar_icon")
     .eq("id", userId)
     .maybeSingle();
 
@@ -151,7 +153,10 @@ router.post("/oauth", asyncHandler(async (req, res) => {
     // Auto-generate username from email
     const base = (data.user.email || "Player").split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
     const username = base.slice(0, 18) + Math.floor(Math.random() * 99);
-    await supabaseAdmin.from("profiles").insert({ id: userId, username });
+    await supabaseAdmin.from("profiles").insert({
+      id: userId, username,
+      ...(oauthPhoto ? { avatar_icon: oauthPhoto } : {}),
+    });
     await supabaseAdmin.from("equipped").insert({ user_id: userId });
     await supabaseAdmin.from("inventory").insert([
       { user_id: userId, item_id: "av_classic",  item_type: "avatar" },
@@ -160,6 +165,11 @@ router.post("/oauth", asyncHandler(async (req, res) => {
       { user_id: userId, item_id: "fx_confetti",  item_type: "fx"     },
       { user_id: userId, item_id: "qp_classic",   item_type: "pack"   },
     ]);
+  }
+
+  // Sync OAuth photo for existing users who have no uploaded photo yet
+  if (existing && oauthPhoto && (!existing.avatar_icon || !existing.avatar_icon.startsWith("http"))) {
+    await supabaseAdmin.from("profiles").update({ avatar_icon: oauthPhoto }).eq("id", userId);
   }
 
   await updateLoginStreak(userId);

@@ -62,13 +62,15 @@ export const api = {
   removeFriend:   (id)=> del(`/api/friends/${id}`),
 
   // ── Clubs ───────────────────────────────────────────────────────────────────
-  clubs:          ()       => get("/api/clubs"),
-  myClub:         ()       => get("/api/clubs/mine"),
-  createClub:     (b)      => post("/api/clubs", b),
-  joinClub:       (id)     => post(`/api/clubs/${id}/join`),
-  leaveClub:      ()       => post("/api/clubs/leave"),
-  clubChat:       (id)     => get(`/api/clubs/${id}/chat`),
-  sendChat:       (id, b)  => post(`/api/clubs/${id}/chat`, b),
+  clubs:          ()           => get("/api/clubs"),
+  myClub:         ()           => get("/api/clubs/mine"),
+  createClub:     (b)          => post("/api/clubs", b),
+  joinClub:       (id)         => post(`/api/clubs/${id}/join`),
+  leaveClub:      ()           => post("/api/clubs/leave"),
+  promoteMember:  (cid, uid, role) => patch(`/api/clubs/${cid}/members/${uid}/role`, { role }),
+  kickMember:     (cid, uid)   => del(`/api/clubs/${cid}/members/${uid}`),
+  clubChat:       (id)         => get(`/api/clubs/${id}/chat`),
+  sendChat:       (id, b)      => post(`/api/clubs/${id}/chat`, b),
 
   // ── Challenges ──────────────────────────────────────────────────────────────
   challenges:     ()  => get("/api/challenges"),

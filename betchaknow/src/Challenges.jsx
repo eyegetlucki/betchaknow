@@ -338,7 +338,7 @@ export default function ChallengesPage() {
   }, []);
 
   const handleClaim = (challenge) => {
-    const updater = challenge.id?.startsWith("d") ? setDailies : setWeeklies;
+    const updater = challenge.challengeType === "daily" ? setDailies : setWeeklies;
     updater(prev => prev.map(c => c.id === challenge.id ? { ...c, claimed: true } : c));
     setPopup(challenge);
     if (isLoggedIn()) {
