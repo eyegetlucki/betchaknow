@@ -18,34 +18,6 @@ const C = {
   muted2:  "#3d3b5c",
 };
 
-const DAILY_CHALLENGES = [
-  { id:"d1", icon:"🏆", name:"Daily Winner",  desc:"Win 1 game today",              progress:1, total:1,  rewards:[{type:"xp",amount:50,icon:"⭐"}],                                      completed:true,  claimed:false, difficulty:"easy"   },
-  { id:"d2", icon:"🃏", name:"Sly Fox",        desc:"Land a successful bluff",       progress:0, total:1,  rewards:[{type:"xp",amount:30,icon:"⭐"},{type:"coins",amount:10,icon:"🪙"}],  completed:false, claimed:false, difficulty:"easy"   },
-  { id:"d3", icon:"🎯", name:"Sharp Mind",     desc:"Answer 10 questions correctly", progress:6, total:10, rewards:[{type:"xp",amount:40,icon:"⭐"}],                                      completed:false, claimed:false, difficulty:"medium" },
-];
-
-const WEEKLY_CHALLENGES = [
-  { id:"w1", icon:"🏆", name:"Weekly Champion", desc:"Win 5 games this week",                           progress:3,  total:5,  rewards:[{type:"xp",amount:200,icon:"⭐"},{type:"coins",amount:50,icon:"🪙"}],     completed:false, claimed:false, difficulty:"medium" },
-  { id:"w2", icon:"🎰", name:"High Roller",      desc:"Use All-In token and win",                        progress:0,  total:1,  rewards:[{type:"xp",amount:150,icon:"⭐"},{type:"cosmetic",name:"Lucky Spray",icon:"✨"}], completed:false, claimed:false, difficulty:"hard"   },
-  { id:"w3", icon:"👥", name:"Squad Up",          desc:"Play 10 games with friends",                     progress:10, total:10, rewards:[{type:"xp",amount:100,icon:"⭐"},{type:"bp",amount:200,icon:"🎯"}],        completed:true,  claimed:false, difficulty:"medium" },
-  { id:"w4", icon:"🔥", name:"Unstoppable",       desc:"Reach a 7-question streak",                      progress:4,  total:7,  rewards:[{type:"xp",amount:175,icon:"⭐"}],                                          completed:false, claimed:false, difficulty:"hard"   },
-  { id:"w5", icon:"📅", name:"Daily Devotion",    desc:"Complete all daily challenges 3 days in a row", progress:2,  total:3,  rewards:[{type:"xp",amount:300,icon:"⭐"},{type:"coins",amount:100,icon:"🪙"}],     completed:false, claimed:false, difficulty:"hard"   },
-];
-
-const LOGIN_STREAK = {
-  current: 4,
-  todayClaimed: true,
-  days: [
-    { day:1, reward:{icon:"🪙",amount:25, type:"coins"}, claimed:true  },
-    { day:2, reward:{icon:"⭐",amount:50, type:"xp"},    claimed:true  },
-    { day:3, reward:{icon:"🪙",amount:50, type:"coins"}, claimed:true  },
-    { day:4, reward:{icon:"⭐",amount:100,type:"xp"},    claimed:true  },
-    { day:5, reward:{icon:"🎁",amount:1,  type:"box"},   claimed:false },
-    { day:6, reward:{icon:"🪙",amount:75, type:"coins"}, claimed:false },
-    { day:7, reward:{icon:"💎",amount:200,type:"coins",bonus:true}, claimed:false },
-  ],
-};
-
 const DIFFICULTY = {
   easy:   { color: C.a3, label: "Easy"   },
   medium: { color: C.a2, label: "Medium" },
@@ -70,6 +42,28 @@ function useCountdown(targetHours, targetMinutes = 0) {
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [targetHours, targetMinutes]);
+  return time;
+}
+
+function useWeeklyCountdown() {
+  const [time, setTime] = useState("");
+  useEffect(() => {
+    const update = () => {
+      const now  = new Date();
+      const next = new Date(now);
+      const daysUntilSunday = (7 - now.getDay()) % 7 || 7;
+      next.setDate(now.getDate() + daysUntilSunday);
+      next.setHours(0, 0, 0, 0);
+      const diff = next - now;
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      setTime(`${d}d ${h}h ${m}m`);
+    };
+    update();
+    const interval = setInterval(update, 60000);
+    return () => clearInterval(interval);
+  }, []);
   return time;
 }
 
@@ -321,22 +315,26 @@ function ClaimPopup({ data, onClose }) {
 }
 
 export default function ChallengesPage() {
-  const [dailies,  setDailies]  = useState(DAILY_CHALLENGES);
-  const [weeklies, setWeeklies] = useState(WEEKLY_CHALLENGES);
-  const [loginStreak, setLoginStreak] = useState(LOGIN_STREAK);
-  const [popup,    setPopup]    = useState(null);
-  const [tab,      setTab]      = useState("active");
+  const [dailies,     setDailies]     = useState(null);
+  const [weeklies,    setWeeklies]    = useState(null);
+  const [loginStreak, setLoginStreak] = useState(null);
+  const [popup,       setPopup]       = useState(null);
+  const [tab,         setTab]         = useState("active");
+  const [loading,     setLoading]     = useState(true);
 
   const dailyTime  = useCountdown(0);
-  const weeklyTime = "5d 18h 23m";
+  const weeklyTime = useWeeklyCountdown();
 
   useEffect(() => {
-    if (!isLoggedIn()) return;
+    if (!isLoggedIn()) { setLoading(false); return; }
     api.challenges().then(d => {
-      if (d.daily)       setDailies(d.daily);
-      if (d.weekly)      setWeeklies(d.weekly);
-      if (d.loginStreak) setLoginStreak(d.loginStreak);
-    }).catch(() => {});
+      setDailies(d.daily   || []);
+      setWeeklies(d.weekly || []);
+      setLoginStreak(d.loginStreak?.days?.length ? d.loginStreak : null);
+    }).catch(() => {
+      setDailies([]);
+      setWeeklies([]);
+    }).finally(() => setLoading(false));
   }, []);
 
   const handleClaim = (challenge) => {
@@ -348,14 +346,19 @@ export default function ChallengesPage() {
     }
   };
 
-  const dailyCompleted  = dailies.filter(c => c.completed).length;
-  const weeklyCompleted = weeklies.filter(c => c.completed).length;
-  const dailyClaimable  = dailies.filter(c => c.completed && !c.claimed).length;
-  const weeklyClaimable = weeklies.filter(c => c.completed && !c.claimed).length;
+  const d = dailies  || [];
+  const w = weeklies || [];
+
+  const dailyCompleted  = d.filter(c => c.completed).length;
+  const weeklyCompleted = w.filter(c => c.completed).length;
+  const dailyClaimable  = d.filter(c => c.completed && !c.claimed).length;
+  const weeklyClaimable = w.filter(c => c.completed && !c.claimed).length;
   const totalClaimable  = dailyClaimable + weeklyClaimable;
 
-  const filterDaily  = tab === "completed" ? dailies.filter(c=>c.completed)  : tab === "active" ? dailies.filter(c=>!c.claimed)  : dailies;
-  const filterWeekly = tab === "completed" ? weeklies.filter(c=>c.completed) : tab === "active" ? weeklies.filter(c=>!c.claimed) : weeklies;
+  const filterDaily  = tab === "completed" ? d.filter(c=>c.completed)  : tab === "active" ? d.filter(c=>!c.claimed)  : d;
+  const filterWeekly = tab === "completed" ? w.filter(c=>c.completed) : tab === "active" ? w.filter(c=>!c.claimed) : w;
+
+  const loggedIn = isLoggedIn();
 
   return (
     <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
@@ -392,107 +395,139 @@ export default function ChallengesPage() {
             )}
           </div>
 
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))", gap:12, marginBottom:20 }}>
-            <div style={{ background:C.card2, border:`1px solid ${C.a3}44`, borderRadius:14, padding:"14px 18px", display:"flex", alignItems:"center", gap:12 }}>
-              <div style={{ fontSize:30 }}>📅</div>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Daily</div>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
-                  <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color:C.text }}>{dailyCompleted}/{dailies.length}</div>
-                  <div style={{ fontSize:11, color:C.a3, fontWeight:700 }}>⏱ Resets in {dailyTime}</div>
+          {!loading && loggedIn && (
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))", gap:12, marginBottom:20 }}>
+              <div style={{ background:C.card2, border:`1px solid ${C.a3}44`, borderRadius:14, padding:"14px 18px", display:"flex", alignItems:"center", gap:12 }}>
+                <div style={{ fontSize:30 }}>📅</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Daily</div>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
+                    <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color:C.text }}>{dailyCompleted}/{d.length}</div>
+                    <div style={{ fontSize:11, color:C.a3, fontWeight:700 }}>⏱ Resets in {dailyTime}</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ background:C.card2, border:`1px solid ${C.a5}44`, borderRadius:14, padding:"14px 18px", display:"flex", alignItems:"center", gap:12 }}>
+                <div style={{ fontSize:30 }}>📆</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Weekly</div>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
+                    <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color:C.text }}>{weeklyCompleted}/{w.length}</div>
+                    <div style={{ fontSize:11, color:C.a5, fontWeight:700 }}>⏱ {weeklyTime}</div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div style={{ background:C.card2, border:`1px solid ${C.a5}44`, borderRadius:14, padding:"14px 18px", display:"flex", alignItems:"center", gap:12 }}>
-              <div style={{ fontSize:30 }}>📆</div>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Weekly</div>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
-                  <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:22, color:C.text }}>{weeklyCompleted}/{weeklies.length}</div>
-                  <div style={{ fontSize:11, color:C.a5, fontWeight:700 }}>⏱ {weeklyTime}</div>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
 
-          <div style={{ display:"flex", gap:2, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
-            {[
-              { id:"active",    label:"Active",    count: dailies.filter(c=>!c.claimed).length + weeklies.filter(c=>!c.claimed).length },
-              { id:"completed", label:"Completed", count: dailyCompleted + weeklyCompleted },
-              { id:"all",       label:"All",       count: dailies.length + weeklies.length },
-            ].map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{
-                padding:"10px 16px", border:"none", background:"transparent",
-                color: tab===t.id ? C.text : C.muted,
-                borderRadius:"10px 10px 0 0",
-                borderBottom: tab===t.id ? `2px solid ${C.a4}` : "2px solid transparent",
-                fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:700, cursor:"pointer",
-                display:"inline-flex", alignItems:"center", gap:6,
-              }}>
-                {t.label}
-                <span style={{ background: tab===t.id ? C.a4+"33" : C.border2, color: tab===t.id ? C.a4 : C.muted, fontSize:11, padding:"1px 7px", borderRadius:10, fontWeight:800 }}>{t.count}</span>
-              </button>
-            ))}
-          </div>
+          {!loading && loggedIn && (
+            <div style={{ display:"flex", gap:2, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
+              {[
+                { id:"active",    label:"Active",    count: d.filter(c=>!c.claimed).length + w.filter(c=>!c.claimed).length },
+                { id:"completed", label:"Completed", count: dailyCompleted + weeklyCompleted },
+                { id:"all",       label:"All",       count: d.length + w.length },
+              ].map(t => (
+                <button key={t.id} onClick={() => setTab(t.id)} style={{
+                  padding:"10px 16px", border:"none", background:"transparent",
+                  color: tab===t.id ? C.text : C.muted,
+                  borderRadius:"10px 10px 0 0",
+                  borderBottom: tab===t.id ? `2px solid ${C.a4}` : "2px solid transparent",
+                  fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:700, cursor:"pointer",
+                  display:"inline-flex", alignItems:"center", gap:6,
+                }}>
+                  {t.label}
+                  <span style={{ background: tab===t.id ? C.a4+"33" : C.border2, color: tab===t.id ? C.a4 : C.muted, fontSize:11, padding:"1px 7px", borderRadius:10, fontWeight:800 }}>{t.count}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       <div style={{ maxWidth:900, margin:"0 auto", padding:"24px 24px 0" }}>
-        <div style={{ marginBottom:28 }}>
-          <LoginStreak data={loginStreak} />
-        </div>
 
-        {filterDaily.length > 0 && (
-          <div style={{ marginBottom:32 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, flexWrap:"wrap", gap:8 }}>
-              <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:24, display:"flex", alignItems:"center", gap:8 }}>
-                📅 Daily Challenges
-                <span style={{ fontSize:13, color:C.muted, fontWeight:600 }}>{dailyCompleted}/{dailies.length} done</span>
-              </h2>
-              <div style={{ display:"flex", alignItems:"center", gap:6, background:C.card2, border:`1px solid ${C.border}`, borderRadius:10, padding:"4px 12px" }}>
-                <span style={{ fontSize:11, color:C.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:0.5 }}>Resets in</span>
-                <span style={{ fontSize:13, color:C.a3, fontWeight:900, animation:"tickerPulse 1.5s ease-in-out infinite" }}>{dailyTime}</span>
+        {loading && (
+          <div style={{ textAlign:"center", padding:"80px 0", color:C.muted }}>
+            <div style={{ fontSize:48, marginBottom:16, animation:"pulse 1.4s ease-in-out infinite" }}>🎯</div>
+            <p style={{ fontSize:14, fontWeight:600 }}>Loading challenges…</p>
+          </div>
+        )}
+
+        {!loading && !loggedIn && (
+          <div style={{ textAlign:"center", padding:"80px 24px", color:C.muted }}>
+            <div style={{ fontSize:64, marginBottom:16 }}>🔒</div>
+            <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:26, color:C.text, marginBottom:8 }}>Sign in to track progress</h3>
+            <p style={{ fontSize:13, fontWeight:600 }}>Log in or create an account to earn XP, coins, and streak rewards from daily challenges.</p>
+          </div>
+        )}
+
+        {!loading && loggedIn && (
+          <>
+            {loginStreak && (
+              <div style={{ marginBottom:28 }}>
+                <LoginStreak data={loginStreak} />
               </div>
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(320px, 1fr))", gap:14 }}>
-              {filterDaily.map(c => <ChallengeCard key={c.id} challenge={c} accent={C.a3} onClaim={handleClaim} />)}
-            </div>
-          </div>
-        )}
+            )}
 
-        {filterWeekly.length > 0 && (
-          <div style={{ marginBottom:32 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, flexWrap:"wrap", gap:8 }}>
-              <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:24, display:"flex", alignItems:"center", gap:8 }}>
-                📆 Weekly Challenges
-                <span style={{ fontSize:13, color:C.muted, fontWeight:600 }}>{weeklyCompleted}/{weeklies.length} done</span>
-              </h2>
-              <div style={{ display:"flex", alignItems:"center", gap:6, background:C.card2, border:`1px solid ${C.border}`, borderRadius:10, padding:"4px 12px" }}>
-                <span style={{ fontSize:11, color:C.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:0.5 }}>Resets</span>
-                <span style={{ fontSize:13, color:C.a5, fontWeight:900 }}>{weeklyTime}</span>
+            {filterDaily.length > 0 && (
+              <div style={{ marginBottom:32 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, flexWrap:"wrap", gap:8 }}>
+                  <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:24, display:"flex", alignItems:"center", gap:8 }}>
+                    📅 Daily Challenges
+                    <span style={{ fontSize:13, color:C.muted, fontWeight:600 }}>{dailyCompleted}/{d.length} done</span>
+                  </h2>
+                  <div style={{ display:"flex", alignItems:"center", gap:6, background:C.card2, border:`1px solid ${C.border}`, borderRadius:10, padding:"4px 12px" }}>
+                    <span style={{ fontSize:11, color:C.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:0.5 }}>Resets in</span>
+                    <span style={{ fontSize:13, color:C.a3, fontWeight:900, animation:"tickerPulse 1.5s ease-in-out infinite" }}>{dailyTime}</span>
+                  </div>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(320px, 1fr))", gap:14 }}>
+                  {filterDaily.map(c => <ChallengeCard key={c.id} challenge={c} accent={C.a3} onClaim={handleClaim} />)}
+                </div>
               </div>
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(320px, 1fr))", gap:14 }}>
-              {filterWeekly.map(c => <ChallengeCard key={c.id} challenge={c} accent={C.a5} onClaim={handleClaim} />)}
-            </div>
-          </div>
-        )}
+            )}
 
-        {filterDaily.length === 0 && filterWeekly.length === 0 && (
-          <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
-            <div style={{ fontSize:64, marginBottom:14, opacity:0.5 }}>🎉</div>
-            <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:24, color:C.text, marginBottom:6 }}>All caught up!</h3>
-            <p style={{ fontSize:13, color:C.muted, fontWeight:600 }}>{tab === "completed" ? "No completed challenges yet" : "Check back later for more"}</p>
-          </div>
-        )}
+            {filterWeekly.length > 0 && (
+              <div style={{ marginBottom:32 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, flexWrap:"wrap", gap:8 }}>
+                  <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:24, display:"flex", alignItems:"center", gap:8 }}>
+                    📆 Weekly Challenges
+                    <span style={{ fontSize:13, color:C.muted, fontWeight:600 }}>{weeklyCompleted}/{w.length} done</span>
+                  </h2>
+                  <div style={{ display:"flex", alignItems:"center", gap:6, background:C.card2, border:`1px solid ${C.border}`, borderRadius:10, padding:"4px 12px" }}>
+                    <span style={{ fontSize:11, color:C.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:0.5 }}>Resets</span>
+                    <span style={{ fontSize:13, color:C.a5, fontWeight:900 }}>{weeklyTime}</span>
+                  </div>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(320px, 1fr))", gap:14 }}>
+                  {filterWeekly.map(c => <ChallengeCard key={c.id} challenge={c} accent={C.a5} onClaim={handleClaim} />)}
+                </div>
+              </div>
+            )}
 
-        <div style={{ background:`linear-gradient(135deg, ${C.a4}11, ${C.a5}08)`, border:`1px solid ${C.a4}33`, borderRadius:16, padding:"16px 20px", marginTop:16, display:"flex", alignItems:"center", gap:14 }}>
-          <span style={{ fontSize:28 }}>💡</span>
-          <div>
-            <div style={{ fontWeight:800, fontSize:13, color:C.text }}>Pro Tip</div>
-            <div style={{ fontSize:12, color:C.muted, fontWeight:500, marginTop:2 }}>Completing all 3 daily challenges gives you bonus battle pass XP. Hit your weekly goals for exclusive cosmetics!</div>
-          </div>
-        </div>
+            {filterDaily.length === 0 && filterWeekly.length === 0 && (
+              <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
+                <div style={{ fontSize:64, marginBottom:14, opacity:0.5 }}>{tab === "completed" ? "🏅" : "🎯"}</div>
+                <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:24, color:C.text, marginBottom:6 }}>
+                  {tab === "completed" ? "No completed challenges yet" : d.length + w.length === 0 ? "No challenges available" : "All caught up!"}
+                </h3>
+                <p style={{ fontSize:13, color:C.muted, fontWeight:600 }}>
+                  {tab === "completed" ? "Complete some challenges to see them here." : d.length + w.length === 0 ? "Check back soon — new challenges are coming!" : "Check back later for more."}
+                </p>
+              </div>
+            )}
+
+            {(d.length > 0 || w.length > 0) && (
+              <div style={{ background:`linear-gradient(135deg, ${C.a4}11, ${C.a5}08)`, border:`1px solid ${C.a4}33`, borderRadius:16, padding:"16px 20px", marginTop:16, display:"flex", alignItems:"center", gap:14 }}>
+                <span style={{ fontSize:28 }}>💡</span>
+                <div>
+                  <div style={{ fontWeight:800, fontSize:13, color:C.text }}>Pro Tip</div>
+                  <div style={{ fontSize:12, color:C.muted, fontWeight:500, marginTop:2 }}>Completing all daily challenges gives you bonus battle pass XP. Hit your weekly goals for exclusive cosmetics!</div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <ClaimPopup data={popup} onClose={() => setPopup(null)} />

@@ -433,8 +433,9 @@ function AuthGate({ section, onLogin, onClose }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen,        setScreen]        = useState("main");
-  const [section,       setSection]       = useState("lobby");
+  const [screen,          setScreen]        = useState("main");
+  const [initialRoundData, setInitialRoundData] = useState(null);
+  const [section,         setSection]       = useState("lobby");
   const [gateFor,       setGateFor]       = useState(null);
   const [loggedIn,      setLoggedIn]      = useState(isLoggedIn());
   const [avatarUrl,     setAvatarUrl]     = useState(() => localStorage.getItem("bk_avatar") || "");
@@ -562,7 +563,7 @@ export default function App() {
   }
 
   if (screen === "game") {
-    return <GameFlow onExit={() => setScreen("main")} />;
+    return <GameFlow onExit={() => { setInitialRoundData(null); setScreen("main"); }} initialRoundData={initialRoundData} />;
   }
 
   return (
@@ -586,7 +587,7 @@ export default function App() {
         </button>
       )}
 
-      {section === "lobby"       && <LobbyFlow onStartGame={() => setScreen("game")} onLogin={() => setScreen("auth")} loggedIn={loggedIn} />}
+      {section === "lobby"       && <LobbyFlow onStartGame={(data) => { setInitialRoundData(data ?? null); setScreen("game"); }} onLogin={() => setScreen("auth")} loggedIn={loggedIn} />}
       {section === "leaderboard" && <LeaderboardPage />}
       {section === "challenges"  && <ChallengesPage />}
       {section === "shop"        && <ShopPage />}

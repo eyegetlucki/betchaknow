@@ -985,7 +985,7 @@ function VictoryFX() {
   );
 }
 
-export default function GameFlow({ onExit }) {
+export default function GameFlow({ onExit, initialRoundData }) {
   // ── state ──────────────────────────────────────────────────────────────────
   const [phase,         setPhase]         = useState("lobby");
   const [round,         setRound]         = useState(0);
@@ -1101,6 +1101,23 @@ export default function GameFlow({ onExit }) {
         .forEach(e => socket.off(e));
     };
   }, [mapPlayers]);
+
+  // Apply round 1 data passed from the lobby (non-host players receive roundStart
+  // before Game mounts, so we carry it through as a prop instead of the socket event)
+  useEffect(() => {
+    if (!initialRoundData) return;
+    const { round, total, betTimer, state, category: cat } = initialRoundData;
+    setRound(round);
+    setTotalRounds(total);
+    setBetTimerSecs(betTimer || 60);
+    setCategory(cat || null);
+    setVoteCounts({});
+    setMyBet(null);
+    setBetLocked(false);
+    setAnswered(false);
+    if (state?.players) setPlayers(mapPlayers(state.players));
+    setPhase("blindbet");
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── actions ────────────────────────────────────────────────────────────────
   function handleBetConfirm(bet) {

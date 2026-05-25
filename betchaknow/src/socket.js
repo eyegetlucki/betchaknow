@@ -10,7 +10,7 @@ export function getSocket() {
   if (!_socket) {
     _socket = io(SERVER, {
       autoConnect: false,
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
     });
   }
   return _socket;
@@ -27,7 +27,7 @@ export function connectSocket() {
     s.disconnect();
   }
 
-  s.auth = { token };
+  s.auth = { token, avatar: localStorage.getItem("bk_avatar") || "" };
   _connectedToken = token;
 
   if (!s.connected) s.connect();

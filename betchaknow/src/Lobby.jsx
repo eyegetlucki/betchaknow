@@ -191,25 +191,28 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
     });
   }, [screen, isHost, rounds, timer, categories, toggles]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync real player list from server while in lobby
+  // Sync real player list from server while in lobby; transition non-host players when game starts
   useEffect(() => {
     if (screen !== "lobby") return;
     const socket = getSocket();
     if (!socket) return;
 
-    const onRoomState = ({ players: sp }) => setPlayers(normalizePlayers(sp));
+    const onRoomState    = ({ players: sp }) => setPlayers(normalizePlayers(sp));
     const onPlayerJoined = ({ state }) => setPlayers(normalizePlayers(state.players));
     const onPlayerLeft   = ({ state }) => setPlayers(normalizePlayers(state.players));
+    const onRoundStart   = (data) => { if (onStartGame) onStartGame(data); };
 
-    socket.on("roomState", onRoomState);
+    socket.on("roomState",    onRoomState);
     socket.on("playerJoined", onPlayerJoined);
-    socket.on("playerLeft", onPlayerLeft);
+    socket.on("playerLeft",   onPlayerLeft);
+    socket.on("roundStart",   onRoundStart);
     return () => {
-      socket.off("roomState", onRoomState);
+      socket.off("roomState",    onRoomState);
       socket.off("playerJoined", onPlayerJoined);
-      socket.off("playerLeft", onPlayerLeft);
+      socket.off("playerLeft",   onPlayerLeft);
+      socket.off("roundStart",   onRoundStart);
     };
-  }, [screen]);
+  }, [screen, onStartGame]);
 
   const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
