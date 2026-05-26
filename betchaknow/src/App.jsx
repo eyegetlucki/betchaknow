@@ -653,7 +653,10 @@ export default function App() {
   // the socket connection is dead but React state still thinks it's live. Force a clean
   // reload so the app starts fresh instead of showing a broken/error state.
   useEffect(() => {
-    const onPageShow = (e) => { if (e.persisted) window.location.reload(); };
+    // Don't reload if OAuth tokens are present in the URL — let Supabase handle them first
+    const onPageShow = (e) => {
+      if (e.persisted && !window.location.hash.includes("access_token")) window.location.reload();
+    };
     window.addEventListener("pageshow", onPageShow);
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);

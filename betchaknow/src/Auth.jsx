@@ -203,7 +203,7 @@ async function startOAuth(provider) {
 
   await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: window.location.origin, queryParams },
+    options: { redirectTo: `${window.location.origin}/`, queryParams },
   });
 }
 
