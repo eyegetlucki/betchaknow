@@ -75,6 +75,30 @@ function useMusicPlayer(enabled, volume) {
   }, [volume]);
 }
 
+function useSfxPlayer(enabled, volume) {
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const audio = new Audio("/sfx/button-press.mp3");
+    audio.preload = "auto";
+    audioRef.current = audio;
+    return () => { audio.src = ""; };
+  }, []);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (!enabled) return;
+      if (!e.target.closest('button, a, [role="button"], label, input[type="range"]')) return;
+      const clone = audioRef.current?.cloneNode();
+      if (!clone) return;
+      clone.volume = Math.max(0, Math.min(1, volume / 100));
+      clone.play().catch(() => {});
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [enabled, volume]);
+}
+
 const NAV_ITEMS = [
   { id:"lobby",       icon:"🎯", label:"Play"    },
   { id:"leaderboard", icon:"🏆", label:"Ranks"   },
@@ -520,6 +544,7 @@ export default function App() {
   }));
 
   useMusicPlayer(settings.musicEnabled, settings.musicVolume);
+  useSfxPlayer(settings.sfxEnabled, settings.sfxVolume);
 
   const updateSetting = (key, value) => {
     setSettings(s => ({ ...s, [key]: value }));

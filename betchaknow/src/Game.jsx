@@ -65,7 +65,7 @@ function calcPayout(player, correctPlayerId, allPlayers) {
   const ddMult = doubleDown ? 2 : 1;
 
   if (bet.type === "none") return correct ? 50 : 0;
-  if (bet.type === "allin") return correct ? player.allInAmount : -player.allInAmount;
+  if (bet.type === "allin") return correct ? player.allInAmount : 0;
   if (bet.type === "self") {
     const mult = streakMult * ddMult;
     return correct ? Math.round(bet.amount * mult) : -bet.amount;
@@ -657,7 +657,7 @@ function QuestionScreen({ question, players, myPlayer, myBet: myBetProp, timerSe
         <span style={{ color:C.accent2, fontSize:12, fontWeight:800 }}>
           {myBet.type==="none" && "No bet — +50 if correct"}
           {myBet.type==="self" && `${myBet.amount} pts on yourself${doubleDown?" (2x)":""}`}
-          {myBet.type==="other" && `${myBet.amount} pts on ${MOCK_PLAYERS.find(p=>p.id===myBet.targetId)?.name}`}
+          {myBet.type==="other" && `${myBet.amount} pts on ${players.find(p=>p.id===myBet.targetId)?.name || "?"}`}
           {myBet.type==="allin" && "🎰 ALL IN!"}
         </span>
       </div>
@@ -1169,8 +1169,12 @@ export default function GameFlow({ onExit, initialRoundData }) {
     on("playerJoined", ({ state }) => setPlayers(mapPlayers(state.players)));
     on("playerLeft",   ({ state }) => setPlayers(mapPlayers(state.players)));
 
-    on("roomState", ({ players: sp }) => {
-      if (sp) setPlayers(mapPlayers(sp));
+    on("roomState", (fullState) => {
+      const { players: sp, currentRound: sr, totalRounds: st, currentQ: sq } = fullState || {};
+      if (sp)   setPlayers(mapPlayers(sp));
+      if (sr)   setRound(r => r || sr);        // only fill in if we don't have it yet
+      if (st)   setTotalRounds(t => t || st);
+      if (sq)   setQuestion(q => q || sq);
     });
 
     on("roundStart", ({ round, total, betTimer, state, category: cat }) => {
