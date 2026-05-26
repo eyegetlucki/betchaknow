@@ -298,6 +298,10 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
     setPlayers([]);
     setIsHost(false);
     setRoomCode("");
+    if (!loggedIn) {
+      localStorage.removeItem("bk_username");
+      setNameInput("");
+    }
     setScreen("home");
   };
 
@@ -961,7 +965,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
               onClick={() => {
                 if (!canStart) return;
                 getSocket().emit("startGame");
-                onStartGame && onStartGame();
+                // Transition happens via roundStart listener (same as non-host)
               }}
             >
               {canStart ? "🚀 Start Game!" : `⏳ Waiting for players (${players.length}/2 min)`}

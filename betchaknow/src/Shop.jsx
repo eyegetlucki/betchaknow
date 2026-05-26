@@ -707,9 +707,18 @@ export default function ShopPage() {
         ...(inv?.inventory?.map(i => i.item_id) || []),
       ]));
       if (me?.equipped) {
-        setEquipped(me.equipped);
-        if (me.equipped.theme) localStorage.setItem("bk_equipped_theme", me.equipped.theme);
-        if (me.equipped.fx)    localStorage.setItem("bk_equipped_fx",    me.equipped.fx);
+        const resolved = {
+          avatar: me.equipped.avatar || "av_classic",
+          theme:  me.equipped.theme  || "th_neon",
+          cards:  me.equipped.cards  || "card_default",
+          fx:     me.equipped.fx     || "fx_confetti",
+          badge:  me.equipped.badge  || null,
+        };
+        setEquipped(resolved);
+        localStorage.setItem("bk_equipped_theme", resolved.theme);
+        localStorage.setItem("bk_equipped_fx",    resolved.fx);
+        const avatarItem = ITEMS.find(i => i.id === resolved.avatar);
+        if (avatarItem?.icon) localStorage.setItem("bk_equipped_character", avatarItem.icon);
       }
       if (purchaseResult === "success") {
         setView("coinstore");

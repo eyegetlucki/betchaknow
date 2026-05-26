@@ -1138,13 +1138,15 @@ export default function GameFlow({ onExit, initialRoundData }) {
   const myUsername = localStorage.getItem("bk_username") || "You";
 
   // Normalize server player shape → UI shape
-  const mapPlayers = useCallback((serverPlayers) =>
-    serverPlayers.map(p => ({
+  const mapPlayers = useCallback((serverPlayers) => {
+    const mySocketId = getSocket()?.id;
+    return serverPlayers.map(p => ({
       ...p,
       name:  p.username || p.name || "?",
-      isMe:  (p.username || p.name) === myUsername,
+      isMe:  (mySocketId && p.id === mySocketId) || (p.username || p.name) === myUsername,
       allInAmount: p.allInAmount ?? p.points,
-    })), [myUsername]);
+    }));
+  }, [myUsername]);
 
   const myPlayer = players.find(p => p.isMe) ?? { points: START_POINTS, allInUsed: false, name: myUsername, isMe: true };
 
@@ -1257,11 +1259,15 @@ export default function GameFlow({ onExit, initialRoundData }) {
   function handleBetConfirm(bet) {
     setMyBet(bet);
     setBetLocked(true);
+    if (bet.type === "allin") {
+      setPlayers(prev => prev.map(p => p.isMe ? { ...p, allInUsed: true } : p));
+    }
     getSocket().emit("placeBet", bet);
   }
 
   function handleAnswerSubmit({ answer, doubleDown }) {
     setAnswered(true);
+    setPlayers(prev => prev.map(p => p.isMe ? { ...p, answer } : p));
     getSocket().emit("submitAnswer", { answerIdx: answer, doubleDown });
   }
 

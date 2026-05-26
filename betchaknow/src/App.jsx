@@ -624,6 +624,27 @@ export default function App() {
     if (params.has("vip"))      setSection("battlepass");
   }, []);
 
+  // Sync equipped cosmetics to localStorage so the socket handshake always
+  // carries the correct character icon and theme, even if the user has never
+  // visited the Shop page.
+  useEffect(() => {
+    if (!isLoggedIn()) return;
+    const AVATAR_ICONS = {
+      av_classic: "🎯", av_shark: "🦈", av_jester: "🃏",
+      av_crown:   "👑", av_diamond: "💎", av_dragon: "🐉", av_phoenix: "🦅",
+    };
+    api.me().then(data => {
+      const eq = data?.equipped || {};
+      const theme  = eq.theme  || "th_neon";
+      const avatar = eq.avatar || "av_classic";
+      localStorage.setItem("bk_equipped_theme",     theme);
+      localStorage.setItem("bk_equipped_character", AVATAR_ICONS[avatar] || "🎯");
+    }).catch(() => {
+      if (!localStorage.getItem("bk_equipped_theme"))     localStorage.setItem("bk_equipped_theme",     "th_neon");
+      if (!localStorage.getItem("bk_equipped_character")) localStorage.setItem("bk_equipped_character", "🎯");
+    });
+  }, [loggedIn]);
+
   const handleNavClick = (id) => {
     if (id !== "lobby" && !loggedIn) {
       setGateFor(id);
