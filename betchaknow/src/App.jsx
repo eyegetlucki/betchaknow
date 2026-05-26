@@ -24,7 +24,7 @@ function useMusicPlayer(enabled, volume) {
   // Create audio element once
   useEffect(() => {
     const audio = new Audio(TRACKS[0]);
-    audio.volume  = volume / 100;
+    audio.volume  = (volume / 100) * 0.45;
     audio.preload = "auto";
 
     const onEnded = () => {
@@ -71,7 +71,7 @@ function useMusicPlayer(enabled, volume) {
 
   // Sync volume
   useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume / 100;
+    if (audioRef.current) audioRef.current.volume = (volume / 100) * 0.45;
   }, [volume]);
 }
 
