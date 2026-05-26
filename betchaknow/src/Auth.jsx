@@ -184,9 +184,12 @@ async function startOAuth(provider) {
     alert("OAuth is not configured. Please sign in with email.");
     return;
   }
+  const queryParams = provider === "google"
+    ? { access_type: "offline", prompt: "select_account" }
+    : { scope: "identify email" };
   await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: window.location.origin },
+    options: { redirectTo: window.location.origin, queryParams },
   });
 }
 

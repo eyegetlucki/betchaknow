@@ -785,9 +785,17 @@ export default function App() {
                 onMouseEnter={openProfileMenu}
                 onMouseLeave={closeProfileMenu}
               >
+                {/* Tap-outside backdrop for mobile */}
+                {profileMenu && (
+                  <div
+                    onClick={() => setProfileMenu(false)}
+                    style={{ position:"fixed", inset:0, zIndex:190 }}
+                  />
+                )}
+
                 <button
                   className={`bk-nav-btn ${section === "profile" ? "active" : ""}`}
-                  onClick={() => handleNavClick("profile")}
+                  onClick={() => setProfileMenu(m => !m)}
                   style={{ width:"100%" }}
                 >
                   <span className="bk-icon">{icon}</span>
@@ -811,6 +819,13 @@ export default function App() {
                     boxShadow:"0 8px 32px #000000aa",
                     animation:"bk-slideUp 0.15s ease",
                   }}>
+                    <button
+                      className="bk-profile-menu-btn"
+                      style={{ color:"#f0eeff" }}
+                      onClick={() => { setProfileMenu(false); handleNavClick("profile"); }}
+                    >
+                      👤 Profile
+                    </button>
                     <button
                       className="bk-profile-menu-btn"
                       style={{ color:"#f0eeff" }}
