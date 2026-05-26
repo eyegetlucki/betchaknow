@@ -503,7 +503,7 @@ export default function LeaderboardPage() {
   const showLocation = view === "state" ? "state" : "country";
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:90 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:90 }}>
       <style>{css}</style>
 
       <div style={{

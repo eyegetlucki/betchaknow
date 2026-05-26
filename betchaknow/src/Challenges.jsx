@@ -361,7 +361,7 @@ export default function ChallengesPage() {
   const loggedIn = isLoggedIn();
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
       <style>{css}</style>
 
       <div style={{

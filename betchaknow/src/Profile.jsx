@@ -371,7 +371,7 @@ export default function ProfilePage({ onAvatarChange }) {
 
   if (loading) {
     return (
-      <div style={{ minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ minHeight:"100vh", background:"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
         <style>{css}</style>
         <div style={{ textAlign:"center" }}>
           <div style={{ fontSize:48, animation:"float 1s ease-in-out infinite" }}>🎯</div>
@@ -392,7 +392,7 @@ export default function ProfilePage({ onAvatarChange }) {
   ];
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, fontFamily:"'DM Sans',sans-serif", color:C.text, padding:"0 0 60px" }}>
+    <div style={{ minHeight:"100vh", background:"transparent", fontFamily:"'DM Sans',sans-serif", color:C.text, padding:"0 0 60px" }}>
       <style>{css}</style>
 
       <div style={{

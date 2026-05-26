@@ -80,22 +80,28 @@ function calcPayout(player, correctPlayerId, allPlayers) {
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700;800;900&display=swap');
   * { box-sizing: border-box; }
-  @keyframes fadeUp   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes popIn    { from{opacity:0;transform:scale(0.75)} to{opacity:1;transform:scale(1)} }
-  @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  @keyframes float    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
-  @keyframes shake    { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
-  @keyframes timerBar { from{width:100%} to{width:0%} }
-  @keyframes scoreUp  { 0%{opacity:0;transform:translateY(0)} 60%{opacity:1;transform:translateY(-28px)} 100%{opacity:0;transform:translateY(-48px)} }
-  @keyframes reveal   { from{opacity:0;transform:scale(0.8) rotateY(90deg)} to{opacity:1;transform:scale(1) rotateY(0deg)} }
-  @keyframes confetti { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(120px) rotate(720deg);opacity:0} }
-  @keyframes fxDrop     { 0%{transform:translateY(-40px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(540deg);opacity:0} }
-  @keyframes fxConfetti { 0%{transform:translateY(-60px) rotate(0deg);opacity:1} 100%{transform:translateY(108vh) rotate(900deg);opacity:0.15} }
-  @keyframes fxMoney    { 0%{transform:translateY(-60px) rotateZ(-20deg) rotateY(0deg);opacity:1} 50%{transform:translateY(48vh) rotateZ(12deg) rotateY(180deg)} 100%{transform:translateY(108vh) rotateZ(-8deg) rotateY(360deg);opacity:0.15} }
-  @keyframes fxBurst    { 0%{transform:translate(-50%,-50%) scale(0.2);opacity:1} 65%{opacity:1} 100%{transform:translate(calc(-50% + var(--bx,0px)),calc(-50% + var(--by,0px))) scale(0.35);opacity:0} }
-  @keyframes fxLightning{ 0%{transform:translateY(-80px) scale(2.2);opacity:1;filter:brightness(3.5) saturate(2)} 25%{filter:brightness(2)} 100%{transform:translateY(108vh) scale(0.5);opacity:0;filter:brightness(1)} }
-  @keyframes fxGalaxy   { 0%{transform:translate(-50%,-50%) scale(0.15);opacity:0} 12%{transform:translate(-50%,-50%) scale(1.3);opacity:1} 100%{transform:translate(calc(-50% + var(--bx,0px)),calc(-50% + var(--by,0px))) scale(0.25);opacity:0} }
-  @keyframes fxFlash    { 0%{opacity:0} 8%{opacity:1} 50%{opacity:0.65} 100%{opacity:0} }
+  @keyframes fadeUp      { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes popIn       { from{opacity:0;transform:scale(0.75)} to{opacity:1;transform:scale(1)} }
+  @keyframes pulse       { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes float       { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+  @keyframes shake       { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  @keyframes timerBar    { from{width:100%} to{width:0%} }
+  @keyframes scoreUp     { 0%{opacity:0;transform:translateY(0) scale(0.8)} 30%{opacity:1;transform:translateY(-22px) scale(1.15)} 100%{opacity:0;transform:translateY(-52px) scale(0.9)} }
+  @keyframes reveal      { from{opacity:0;transform:scale(0.8) rotateY(90deg)} to{opacity:1;transform:scale(1) rotateY(0deg)} }
+  @keyframes confetti    { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(120px) rotate(720deg);opacity:0} }
+  @keyframes fxDrop      { 0%{transform:translateY(-40px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(540deg);opacity:0} }
+  @keyframes fxConfetti  { 0%{transform:translateY(-60px) rotate(0deg);opacity:1} 100%{transform:translateY(108vh) rotate(900deg);opacity:0.15} }
+  @keyframes fxMoney     { 0%{transform:translateY(-60px) rotateZ(-20deg) rotateY(0deg);opacity:1} 50%{transform:translateY(48vh) rotateZ(12deg) rotateY(180deg)} 100%{transform:translateY(108vh) rotateZ(-8deg) rotateY(360deg);opacity:0.15} }
+  @keyframes fxBurst     { 0%{transform:translate(-50%,-50%) scale(0.2);opacity:1} 65%{opacity:1} 100%{transform:translate(calc(-50% + var(--bx,0px)),calc(-50% + var(--by,0px))) scale(0.35);opacity:0} }
+  @keyframes fxLightning { 0%{transform:translateY(-80px) scale(2.2);opacity:1;filter:brightness(3.5) saturate(2)} 25%{filter:brightness(2)} 100%{transform:translateY(108vh) scale(0.5);opacity:0;filter:brightness(1)} }
+  @keyframes fxGalaxy    { 0%{transform:translate(-50%,-50%) scale(0.15);opacity:0} 12%{transform:translate(-50%,-50%) scale(1.3);opacity:1} 100%{transform:translate(calc(-50% + var(--bx,0px)),calc(-50% + var(--by,0px))) scale(0.25);opacity:0} }
+  @keyframes fxFlash     { 0%{opacity:0} 8%{opacity:1} 50%{opacity:0.65} 100%{opacity:0} }
+  @keyframes slideInLeft { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes slideInUp   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes scorePop    { 0%{transform:scale(1)} 35%{transform:scale(1.35)} 65%{transform:scale(0.92)} 100%{transform:scale(1)} }
+  @keyframes leadGlow    { 0%,100%{box-shadow:0 0 10px var(--glow-color, #ffd93d55), 0 0 0 1px var(--glow-color, #ffd93d33)} 50%{box-shadow:0 0 22px var(--glow-color, #ffd93d88), 0 0 0 1px var(--glow-color, #ffd93d66)} }
+  @keyframes barGrow     { from{width:0%} to{width:var(--bar-w,0%)} }
+  @keyframes crownFloat  { 0%,100%{transform:translateY(0) rotate(-5deg)} 50%{transform:translateY(-4px) rotate(5deg)} }
   button { font-family:'Nunito',sans-serif; cursor:pointer; transition:transform 0.12s,box-shadow 0.12s; }
   button:not(:disabled):hover  { transform:scale(1.03) !important; }
   button:not(:disabled):active { transform:scale(0.96) !important; }
@@ -190,11 +196,13 @@ function ScorePill({ player, showDelta, delta }) {
       )}
       {showDelta && delta !== 0 && (
         <div style={{
-          position:"absolute", top:-8, right:0,
+          position:"absolute", top:-12, right:4,
           color: delta > 0 ? C.accent3 : C.accent1,
-          fontWeight:900, fontSize:14, fontFamily:"'Boogaloo',cursive",
-          animation:"scoreUp 1.4s ease forwards",
+          fontWeight:900, fontSize:16, fontFamily:"'Boogaloo',cursive",
+          animation:"scoreUp 1.6s cubic-bezier(.22,.61,.36,1) forwards",
           pointerEvents:"none", whiteSpace:"nowrap",
+          textShadow: delta > 0 ? `0 0 10px ${C.accent3}99` : `0 0 10px ${C.accent1}99`,
+          filter: "drop-shadow(0 1px 4px #0008)",
         }}>
           {delta > 0 ? `+${delta}` : delta}
         </div>
@@ -1072,45 +1080,80 @@ function useIsMobile() {
   return mobile;
 }
 
+const RANK_STYLES = [
+  { badge:"👑", bg:"linear-gradient(135deg,#f0a50022,#ffd93d11)", border:"#ffd93d55", glow:"#ffd93d" },
+  { badge:"🥈", bg:"linear-gradient(135deg,#c0c0c022,#a8a8a811)", border:"#c0c0c055", glow:"#c0c0c0" },
+  { badge:"🥉", bg:"linear-gradient(135deg,#cd7f3222,#b8621211)", border:"#cd7f3255", glow:"#cd7f32" },
+];
+
 function MobileScoreboard({ players }) {
   const sorted = [...players].sort((a, b) => b.points - a.points);
+  const maxPts = sorted[0]?.points || 1;
   return (
     <div style={{
       position:"sticky", top:0, zIndex:10,
-      background:"#0e0c1acc", backdropFilter:"blur(10px)",
+      background:"rgba(14,12,26,0.88)", backdropFilter:"blur(16px)",
+      WebkitBackdropFilter:"blur(16px)",
       borderBottom:`1px solid ${C.cardBorder}`,
-      padding:"8px 12px",
-      display:"flex", gap:8, overflowX:"auto",
-      justifyContent:"center",
+      padding:"8px 10px 10px",
+      display:"flex", gap:7, overflowX:"auto",
       WebkitOverflowScrolling:"touch",
     }}>
-      {sorted.map((p, rank) => (
-        <div key={p.id} style={{
-          display:"flex", flexDirection:"column", alignItems:"center",
-          gap:2, padding:"6px 10px", borderRadius:12, flexShrink:0,
-          background: p.isMe ? p.color+"22" : "#ffffff0a",
-          border:`1px solid ${p.isMe ? p.color+"55" : "#ffffff10"}`,
-          minWidth:64,
-        }}>
-          <div style={{ fontSize:8, color:["🥇","🥈","🥉"][rank] ? C.accent2 : C.muted, fontWeight:800 }}>
-            {["🥇","🥈","🥉"][rank] || `#${rank+1}`}
+      {sorted.map((p, rank) => {
+        const rs = RANK_STYLES[rank];
+        const barPct = maxPts > 0 ? Math.round((p.points / maxPts) * 100) : 0;
+        const isLeader = rank === 0;
+        return (
+          <div key={p.id} style={{
+            display:"flex", flexDirection:"column", alignItems:"center",
+            gap:3, padding:"7px 9px 8px", borderRadius:14, flexShrink:0,
+            background: rs ? rs.bg : p.isMe ? p.color+"18" : "#ffffff08",
+            border:`1px solid ${rs ? rs.border : p.isMe ? p.color+"55" : "#ffffff12"}`,
+            minWidth:68, position:"relative",
+            animation:`slideInUp 0.35s ease ${rank * 0.07}s both`,
+            ...(isLeader ? { "--glow-color": rs.glow, animation:`slideInUp 0.35s ease both, leadGlow 2.4s ease-in-out ${rank * 0.07 + 0.4}s infinite` } : {}),
+          }}>
+            {/* rank badge */}
+            <div style={{
+              fontSize: isLeader ? 11 : 9,
+              fontWeight:900, lineHeight:1,
+              animation: isLeader ? "crownFloat 2s ease-in-out infinite" : "none",
+            }}>
+              {rs ? rs.badge : `#${rank+1}`}
+            </div>
+            {/* avatar + character */}
+            <div style={{ position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <div style={{ borderRadius:"50%", padding:2, background: isLeader ? `linear-gradient(135deg, ${rs.glow}, transparent)` : "transparent" }}>
+                <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={28} />
+              </div>
+              {p.character && (
+                <span style={{ position:"absolute", bottom:-5, right:-7, fontSize:14, filter:`drop-shadow(0 1px 4px ${p.color}88)` }}>
+                  {p.character}
+                </span>
+              )}
+            </div>
+            {/* name */}
+            <div style={{ fontSize:9, fontWeight:800, color: p.isMe ? C.text : C.muted, maxWidth:62, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginTop:4 }}>
+              {p.name}{p.isMe ? " ★" : ""}
+            </div>
+            {/* score */}
+            <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:15, color: isLeader ? C.accent2 : C.text, lineHeight:1 }}>
+              {p.points.toLocaleString()}
+            </div>
+            {/* mini bar */}
+            <div style={{ width:"100%", height:3, background:"#ffffff14", borderRadius:2, overflow:"hidden", marginTop:2 }}>
+              <div style={{
+                height:"100%", borderRadius:2,
+                background: isLeader ? `linear-gradient(90deg, ${C.accent2}, ${C.accent1})` : p.color,
+                width:`${barPct}%`, transition:"width 0.8s cubic-bezier(.34,1.56,.64,1)",
+              }} />
+            </div>
+            {p.streak >= 3 && (
+              <div style={{ fontSize:8, color:C.accent1, fontWeight:900 }}>🔥{p.streak}×</div>
+            )}
           </div>
-          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"center", gap:3 }}>
-            {p.character
-              ? <CharacterBadge character={p.character} color={p.color} size={26} animate={p.isMe} />
-              : <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={26} />
-            }
-            {p.character && <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={14} />}
-          </div>
-          <div style={{ fontSize:9, fontWeight:800, color: p.isMe ? C.text : C.muted, maxWidth:58, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-            {p.name}
-          </div>
-          <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:13, color:C.accent2 }}>
-            {p.points}
-          </div>
-          {p.streak >= 3 && <span style={{fontSize:8}}>🔥×{p.streak}</span>}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -1289,7 +1332,7 @@ export default function GameFlow({ onExit, initialRoundData }) {
   const isMobile = useIsMobile();
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, position:"relative", overflow:"hidden", fontFamily:"'Nunito',sans-serif" }}>
+    <div style={{ minHeight:"100vh", background:"transparent", position:"relative", overflow:"hidden", fontFamily:"'Nunito',sans-serif" }}>
       <style>{css}</style>
       {particles.map((p,i) => <Particle key={i} style={{...p, animationDelay:`${i*0.9}s`}} />)}
 
@@ -1310,34 +1353,104 @@ export default function GameFlow({ onExit, initialRoundData }) {
         {inGame && isMobile && <MobileScoreboard players={players} />}
         {inGame && !isMobile && (
           <div style={{
-            width:130, flexShrink:0,
-            background:"#0e0c1a", borderRight:`1px solid ${C.cardBorder}`,
-            display:"flex", flexDirection:"column", gap:6,
-            padding:"12px 8px", overflowY:"auto",
+            width:164, flexShrink:0,
+            background:"rgba(14,12,26,0.82)", backdropFilter:"blur(14px)",
+            WebkitBackdropFilter:"blur(14px)",
+            borderRight:`1px solid ${C.cardBorder}`,
+            display:"flex", flexDirection:"column",
+            padding:"14px 10px 14px", overflowY:"auto", gap:8,
           }}>
-            {[...players].sort((a,b) => b.points - a.points).map((p, rank) => (
-              <div key={p.id} style={{
-                display:"flex", flexDirection:"column", alignItems:"center",
-                gap:3, padding:"8px 6px", borderRadius:12,
-                background: p.isMe ? p.color+"22" : "#ffffff0a",
-                border:`1px solid ${p.isMe ? p.color+"44" : "transparent"}`,
-              }}>
-                <div style={{ fontSize:9, color:C.muted, fontWeight:800 }}>
-                  {["🥇","🥈","🥉"][rank] || `#${rank+1}`}
-                </div>
-                <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"center", gap:3 }}>
-                  <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={36} />
-                  {p.character && <CharacterBadge character={p.character} color={p.color} size={22} animate={p.isMe} />}
-                </div>
-                <div style={{ fontSize:10, fontWeight:800, color: p.isMe ? C.text : C.muted, maxWidth:100, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", textAlign:"center" }}>
-                  {p.name}
-                </div>
-                <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:14, color:C.accent2 }}>
-                  {p.points}
-                </div>
-                {p.streak >= 3 && <span style={{fontSize:9}}>🔥×{p.streak}</span>}
-              </div>
-            ))}
+            {/* header */}
+            <div style={{ textAlign:"center", marginBottom:2 }}>
+              <span style={{ fontSize:9, fontWeight:900, letterSpacing:2, textTransform:"uppercase", color:C.muted }}>Scoreboard</span>
+            </div>
+            {(() => {
+              const sorted = [...players].sort((a,b) => b.points - a.points);
+              const maxPts = sorted[0]?.points || 1;
+              return sorted.map((p, rank) => {
+                const rs = RANK_STYLES[rank];
+                const barPct = maxPts > 0 ? Math.round((p.points / maxPts) * 100) : 0;
+                const isLeader = rank === 0;
+                return (
+                  <div key={p.id} style={{
+                    display:"flex", flexDirection:"column", alignItems:"center",
+                    gap:4, padding:"10px 8px 10px", borderRadius:14,
+                    background: rs ? rs.bg : p.isMe ? p.color+"18" : "#ffffff08",
+                    border:`1px solid ${rs ? rs.border : p.isMe ? p.color+"44" : "#ffffff0f"}`,
+                    position:"relative",
+                    animation:`slideInLeft 0.4s ease ${rank * 0.08}s both`,
+                    ...(isLeader ? { "--glow-color": rs?.glow || C.accent2 } : {}),
+                    boxShadow: isLeader ? `0 0 14px ${rs?.glow || C.accent2}33` : "none",
+                    transition:"box-shadow 0.4s ease",
+                  }}>
+                    {/* rank */}
+                    <div style={{
+                      fontSize: isLeader ? 16 : 11,
+                      lineHeight:1,
+                      animation: isLeader ? "crownFloat 2.2s ease-in-out infinite" : "none",
+                    }}>
+                      {rs ? rs.badge : `#${rank+1}`}
+                    </div>
+                    {/* avatar ring + character */}
+                    <div style={{ position:"relative", display:"inline-flex", alignItems:"center", justifyContent:"center" }}>
+                      <div style={{
+                        borderRadius:"50%",
+                        padding: isLeader ? 2 : 1,
+                        background: isLeader
+                          ? `linear-gradient(135deg, ${rs?.glow || C.accent2}, transparent)`
+                          : p.isMe ? `linear-gradient(135deg, ${p.color}, transparent)` : "transparent",
+                      }}>
+                        <PlayerAvatar name={p.name} color={p.color} avatar={p.avatar} size={40} />
+                      </div>
+                      {p.character && (
+                        <span style={{
+                          position:"absolute", bottom:-6, right:-8,
+                          fontSize:18,
+                          filter:`drop-shadow(0 2px 5px ${p.color}88)`,
+                          animation: isLeader ? "float 3s ease-in-out infinite" : "none",
+                        }}>{p.character}</span>
+                      )}
+                    </div>
+                    {/* name */}
+                    <div style={{
+                      fontSize:11, fontWeight:800, textAlign:"center",
+                      color: p.isMe ? C.text : C.muted,
+                      maxWidth:130, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                      marginTop:4,
+                    }}>
+                      {p.name}{p.isMe ? " ★" : ""}
+                    </div>
+                    {/* score */}
+                    <div style={{
+                      fontFamily:"'Boogaloo',cursive",
+                      fontSize: isLeader ? 20 : 16,
+                      color: isLeader ? C.accent2 : C.text,
+                      lineHeight:1,
+                      textShadow: isLeader ? `0 0 12px ${C.accent2}88` : "none",
+                    }}>
+                      {p.points.toLocaleString()}
+                    </div>
+                    {/* relative score bar */}
+                    <div style={{ width:"100%", height:4, background:"#ffffff12", borderRadius:2, overflow:"hidden" }}>
+                      <div style={{
+                        height:"100%", borderRadius:2,
+                        background: isLeader
+                          ? `linear-gradient(90deg, ${C.accent2}, ${C.accent1})`
+                          : `linear-gradient(90deg, ${p.color}cc, ${p.color}88)`,
+                        width:`${barPct}%`,
+                        transition:"width 0.9s cubic-bezier(.34,1.56,.64,1)",
+                      }} />
+                    </div>
+                    {/* streak */}
+                    {p.streak >= 3 && (
+                      <div style={{ fontSize:10, color:C.accent1, fontWeight:900, letterSpacing:0.5 }}>
+                        🔥 {p.streak}×
+                      </div>
+                    )}
+                  </div>
+                );
+              });
+            })()}
           </div>
         )}
         <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding: isMobile ? "16px 12px" : 20 }}>

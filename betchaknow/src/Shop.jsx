@@ -807,7 +807,7 @@ export default function ShopPage() {
   };
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
       <style>{css}</style>
       <Toast msg={toast?.msg} type={toast?.type} />
 

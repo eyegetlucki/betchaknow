@@ -311,7 +311,7 @@ export default function BattlePassPage() {
   const xpPct = Math.round((xp / xpPerTier) * 100);
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
       <style>{css}</style>
 
       <div style={{ background:`linear-gradient(180deg, ${C.a2}11 0%, ${C.a5}08 40%, transparent 100%)`, borderBottom:`1px solid ${C.border}`, padding:"28px 24px 0", position:"relative", overflow:"hidden" }}>

@@ -328,7 +328,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
   const styles = {
     root: {
       minHeight: "100vh",
-      background: COLORS.bg,
+      background: "transparent",
       fontFamily: "'Nunito', sans-serif",
       position: "relative",
       overflow: "hidden",

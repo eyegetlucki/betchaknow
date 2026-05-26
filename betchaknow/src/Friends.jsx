@@ -1237,7 +1237,7 @@ export default function FriendsFlow() {
   };
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
       <style>{css}</style>
 
       {showCreate && <CreateClubModal onClose={() => setShowCreate(false)} onCreated={handleClubCreated} />}

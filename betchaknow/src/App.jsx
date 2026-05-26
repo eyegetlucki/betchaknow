@@ -216,6 +216,9 @@ function SettingsPanel({ settings, onUpdate, onClose }) {
       rows:[
         { key:"animationsEnabled", label:"Animations", sub:"Screen transitions and particle effects", type:"toggle" },
         { key:"showPointsDelta",   label:"Point Popups", sub:"Show +/- point changes during reveals", type:"toggle" },
+        ...(window.electronAPI?.isElectron
+          ? [{ key:"fullscreen", label:"Fullscreen", sub:"Borderless windowed fullscreen mode", type:"toggle" }]
+          : []),
       ],
     },
   ];
@@ -541,7 +544,16 @@ export default function App() {
     sfxVolume:         parseInt(localStorage.getItem("bk_sfx_vol")    || "80"),
     animationsEnabled: localStorage.getItem("bk_animations")  !== "0",
     showPointsDelta:   localStorage.getItem("bk_pts_delta")   !== "0",
+    fullscreen:        false,
   }));
+
+  // Sync fullscreen state from Electron on mount
+  useEffect(() => {
+    if (!window.electronAPI?.isElectron) return;
+    window.electronAPI.getFullscreen().then(val =>
+      setSettings(s => ({ ...s, fullscreen: val }))
+    );
+  }, []);
 
   useMusicPlayer(settings.musicEnabled, settings.musicVolume);
   useSfxPlayer(settings.sfxEnabled, settings.sfxVolume);
@@ -550,6 +562,7 @@ export default function App() {
     setSettings(s => ({ ...s, [key]: value }));
     const keys = { musicEnabled:"bk_music", musicVolume:"bk_music_vol", sfxEnabled:"bk_sfx", sfxVolume:"bk_sfx_vol", animationsEnabled:"bk_animations", showPointsDelta:"bk_pts_delta" };
     if (keys[key]) localStorage.setItem(keys[key], typeof value === "boolean" ? (value ? "1" : "0") : String(value));
+    if (key === "fullscreen" && window.electronAPI?.isElectron) window.electronAPI.setFullscreen(value);
   };
 
   const handleLogout = async () => {
@@ -598,6 +611,34 @@ export default function App() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Electron: receive betchaknow://oauth deep link after OS redirects back
+  useEffect(() => {
+    if (!window.electronAPI?.isElectron || !supabase) return;
+    window.electronAPI.onOAuthCallback(async (url) => {
+      try {
+        const hashOrQuery = url.includes("#") ? url.split("#")[1] : url.split("?")[1] || "";
+        const params = new URLSearchParams(hashOrQuery);
+        const accessToken  = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        if (!accessToken) return;
+        const { data: { session }, error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken || "" });
+        if (error || !session) throw error || new Error("No session");
+        const provider   = session.user.app_metadata?.provider || "google";
+        const oauthAvatar = session.user.user_metadata?.avatar_url || "";
+        const result = await api.oauth({ provider, access_token: session.access_token });
+        const finalAvatar = result.profile?.avatar_icon || oauthAvatar;
+        saveSession({ token: result.token, refreshToken: result.refreshToken, username: result.profile?.username, avatarUrl: finalAvatar });
+        if (finalAvatar) setAvatarUrl(finalAvatar);
+        setLoggedIn(true);
+        setGateFor(null);
+        setScreen("main");
+        if (result.isNewUser) setShowUsernameSetup(true);
+      } catch (e) {
+        setOauthError(e.message || "Electron OAuth login failed");
+      }
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clear expired token on mount so UI never shows a stale logged-in state
   useEffect(() => {
@@ -688,7 +729,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight:"100vh", background:"#08070f", paddingTop:58 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", paddingTop:58 }}>
       <style>{css}</style>
 
       {section !== "lobby" && (

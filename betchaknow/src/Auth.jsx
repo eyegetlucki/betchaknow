@@ -187,6 +187,20 @@ async function startOAuth(provider) {
   const queryParams = provider === "google"
     ? { access_type: "offline", prompt: "select_account" }
     : { scope: "identify email" };
+
+  if (window.electronAPI?.isElectron) {
+    const { data } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: "betchaknow://oauth",
+        queryParams,
+        skipBrowserRedirect: true,
+      },
+    });
+    if (data?.url) window.electronAPI.openExternal(data.url);
+    return;
+  }
+
   await supabase.auth.signInWithOAuth({
     provider,
     options: { redirectTo: window.location.origin, queryParams },
@@ -805,7 +819,7 @@ export default function AuthFlow({ onAuthenticated }) {
 
   return (
     <div style={{
-      minHeight:"100vh", background:C.bg,
+      minHeight:"100vh", background:"transparent",
       display:"flex", alignItems:"center", justifyContent:"center",
       padding:"24px 16px", position:"relative", overflowX:"hidden",
     }}>
