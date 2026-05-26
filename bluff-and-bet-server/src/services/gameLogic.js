@@ -134,6 +134,7 @@ function applyRoundResults(players, correctIdx, settings) {
     const total      = payout + bluffBonus;
     return {
       ...p,
+      bluffBonus,
       payout:    total,
       points:    Math.max(0, p.points + total),
       streak:    p.correct ? p.streak + 1 : 0,

@@ -60,7 +60,7 @@ function countryObj(stored) {
     : { flag: "🌐", name: stored };
 }
 
-function mapServerList(players) {
+function mapServerList(players, markAllAsFriends = false) {
   const me = getUsername();
   return (players || []).map(p => ({
     rank:     p.rank,
@@ -72,7 +72,7 @@ function mapServerList(players) {
     level:    p.level || 1,
     change:   0,
     isMe:     p.username === me,
-    isFriend: false,
+    isFriend: markAllAsFriends && p.username !== me,
     isVIP:    p.is_vip || false,
   }));
 }
@@ -200,8 +200,8 @@ function FriendDot() {
 
 function Podium({ top3 }) {
   if (!top3 || top3.length < 3) return null;
-  const heights = [110, 130, 90];
-  const order   = [top3[1], top3[0], top3[2]];
+  const placeHeights = { 1: 130, 2: 105, 3: 80 };
+  const order        = [top3[1], top3[0], top3[2]]; // visual: 2nd | 1st | 3rd
 
   return (
     <div style={{
@@ -214,8 +214,8 @@ function Podium({ top3 }) {
       }} />
 
       {order.map((p, idx) => {
-        const place    = idx === 0 ? 2 : idx === 1 ? 1 : 3;
-        const heightVal = idx === 0 ? heights[1] : idx === 1 ? heights[0] : heights[2];
+        const place     = idx === 0 ? 2 : idx === 1 ? 1 : 3;
+        const heightVal = placeHeights[place];
         const colors   = {
           1: { primary: C.a2, secondary: C.a6 },
           2: { primary: "#cbd5e1", secondary: "#94a3b8" },
@@ -477,7 +477,7 @@ export default function LeaderboardPage() {
     if (view === "national" && myProfile?.country) params.country = myProfile.country;
     if (view === "state"    && myProfile?.state)   params.state   = myProfile.state;
     api.leaderboard(params)
-      .then(d => setServerList(mapServerList(d.leaderboard)))
+      .then(d => setServerList(mapServerList(d.leaderboard, view === "friends")))
       .catch(() => setServerList([]))
       .finally(() => setListLoading(false));
   }, [view, myProfile, rankLoading]);

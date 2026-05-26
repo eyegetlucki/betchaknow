@@ -151,6 +151,7 @@ function resolveRound(room) {
       answer: p.answer, correct: p.correct,
       bet: p.bet, doubleDown: p.doubleDown,
       payout: p.payout, streakAfter: p.streak,
+      bluffBonus: p.bluffBonus || 0,
     });
     room.players.set(p.id, p);
   });

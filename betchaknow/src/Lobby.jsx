@@ -64,18 +64,19 @@ function Badge({ children, color }) {
   );
 }
 
-function Toggle({ enabled, onChange }) {
+function Toggle({ enabled, onChange, disabled = false }) {
   return (
-    <div onClick={onChange} style={{
+    <div onClick={disabled ? undefined : onChange} style={{
       width: 44,
       height: 24,
       borderRadius: 12,
       background: enabled ? COLORS.accent3 : "#333",
       position: "relative",
-      cursor: "pointer",
+      cursor: disabled ? "not-allowed" : "pointer",
       transition: "background 0.2s",
       flexShrink: 0,
       border: `2px solid ${enabled ? COLORS.accent3 : "#555"}`,
+      opacity: disabled ? 0.4 : 1,
     }}>
       <div style={{
         position: "absolute",
@@ -880,7 +881,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
         </div>
 
         {tab === "settings" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, animation: "popIn 0.2s ease" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, animation: "popIn 0.2s ease", opacity: isHost ? 1 : 0.55, pointerEvents: isHost ? "auto" : "none" }}>
             <div>
               <label style={styles.label}>Rounds</label>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -912,7 +913,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
         )}
 
         {tab === "categories" && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, animation: "popIn 0.2s ease" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, animation: "popIn 0.2s ease", opacity: isHost ? 1 : 0.55, pointerEvents: isHost ? "auto" : "none" }}>
             {CATEGORIES.map(cat => (
               <button
                 key={cat.id}
@@ -926,7 +927,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
                   fontSize: 14,
                   fontWeight: 700,
                   fontFamily: "'Nunito', sans-serif",
-                  cursor: "pointer",
+                  cursor: isHost ? "pointer" : "not-allowed",
                   transition: "all 0.15s",
                 }}
               >{cat.label}</button>
@@ -942,7 +943,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
                   <div style={{ color: COLORS.text, fontWeight: 800, fontSize: 14 }}>{t.label}</div>
                   <div style={{ color: COLORS.muted, fontSize: 12 }}>{t.desc}</div>
                 </div>
-                <Toggle enabled={toggles[t.id]} onChange={() => setToggles(v => ({ ...v, [t.id]: !v[t.id] }))} />
+                <Toggle enabled={toggles[t.id]} onChange={() => setToggles(v => ({ ...v, [t.id]: !v[t.id] }))} disabled={!isHost} />
               </div>
             ))}
           </div>
@@ -953,22 +954,28 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
         {(() => {
           const hasBots  = players.some(p => p.isBot);
           const canStart = players.length >= 2 || (isHost && hasBots);
+          const btnColor = !isHost ? "#333" : canStart ? COLORS.accent1 : "#333";
+          const btnLabel = !isHost
+            ? "⏳ Waiting for host to start..."
+            : canStart
+              ? "🚀 Start Game!"
+              : `⏳ Waiting for players (${players.length}/2 min)`;
           return (
             <button
               style={{
-                ...styles.btn(canStart ? COLORS.accent1 : "#333"),
+                ...styles.btn(btnColor),
                 fontSize: 18,
                 padding: "16px",
-                opacity: canStart ? 1 : 0.5,
+                opacity: (!isHost || !canStart) ? 0.5 : 1,
+                cursor: (!isHost || !canStart) ? "not-allowed" : "pointer",
               }}
               disabled={!isHost || !canStart}
               onClick={() => {
-                if (!canStart) return;
+                if (!isHost || !canStart) return;
                 getSocket().emit("startGame");
-                // Transition happens via roundStart listener (same as non-host)
               }}
             >
-              {canStart ? "🚀 Start Game!" : `⏳ Waiting for players (${players.length}/2 min)`}
+              {btnLabel}
             </button>
           );
         })()}

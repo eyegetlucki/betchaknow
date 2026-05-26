@@ -230,11 +230,17 @@ function startNextRound(io, room) {
     return endGame(io, room);
   }
 
-  // If a category was voted for, try to swap a matching question into position
+  // If a category was voted for, swap a random matching question into position
   if (room.votedCategory) {
-    const preferred = room.questions.findIndex((q, i) => i >= qIndex && q.cat === room.votedCategory);
-    if (preferred > qIndex) {
-      [room.questions[qIndex], room.questions[preferred]] = [room.questions[preferred], room.questions[qIndex]];
+    const matches = [];
+    for (let i = qIndex; i < room.questions.length; i++) {
+      if (room.questions[i].cat === room.votedCategory) matches.push(i);
+    }
+    if (matches.length > 0) {
+      const pick = matches[Math.floor(Math.random() * matches.length)];
+      if (pick !== qIndex) {
+        [room.questions[qIndex], room.questions[pick]] = [room.questions[pick], room.questions[qIndex]];
+      }
     }
     room.votedCategory = null;
   }
@@ -343,11 +349,12 @@ async function revealRound(io, room) {
       await endGame(io, room);
     } else {
       const CAT_LABELS = { sports:"Sports", science:"Science", history:"History", popculture:"Pop Culture", geography:"Geography", music:"Music", movies:"Movies" };
-      const nextIdx = room.currentRound; // 0-based index of the next unplayed question
-      const remaining = room.questions.slice(nextIdx);
-      const uniqueCats = [...new Set(remaining.map(q => q.cat).filter(c => c && c !== "custom"))];
-      uniqueCats.sort(() => Math.random() - 0.5);
-      const voteOptions = uniqueCats.slice(0, 4).map(id => ({ id, label: CAT_LABELS[id] || id }));
+      const enabledCats = Array.isArray(room.settings.categories) && room.settings.categories.length > 0
+        ? room.settings.categories
+        : Object.keys(CAT_LABELS);
+      const voteOptions = enabledCats
+        .filter(id => CAT_LABELS[id])
+        .map(id => ({ id, label: CAT_LABELS[id] }));
       io.to(room.code).emit("categoryVote", {
         options: voteOptions,
         timer: VOTE_TIMER_SECS,

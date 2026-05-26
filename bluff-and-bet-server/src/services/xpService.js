@@ -40,8 +40,8 @@ async function grantXP(userId, baseXp, isVIP = false) {
   if (!p) return { xpGained, newLevel: 1, leveledUp: false, rewards: [] };
 
   let currentXP    = p.xp + xpGained;
-  let currentLevel = p.level;
-  let xpToNext     = p.xp_to_next;
+  let currentLevel = p.level || 1;
+  let xpToNext     = p.xp_to_next || xpForLevel(currentLevel);
   let coinsEarned  = 0;
   const rewards    = [];
   const badges     = [];
