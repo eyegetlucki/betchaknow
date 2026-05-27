@@ -176,6 +176,11 @@ function initSockets(io) {
       const room = rm.getRoomBySocket(socket.id);
       if (!room || room.state !== "reveal") return;
       const playerId = userId || socket.id;
+
+      // Reject bot votes — only human players count
+      const votingPlayer = room.players.get(playerId);
+      if (votingPlayer?.isBot) return;
+
       room.votesReceived.set(playerId, categoryId);
 
       const counts = {};
@@ -359,7 +364,14 @@ async function revealRound(io, room) {
         options: voteOptions,
         timer: VOTE_TIMER_SECS,
       });
-      schedulePhase(io, room, VOTE_TIMER_SECS * 1000, (io, room) => startNextRound(io, room));
+      schedulePhase(io, room, VOTE_TIMER_SECS * 1000, (io, room) => {
+        if (room.votesReceived.size > 0) {
+          const counts = {};
+          for (const v of room.votesReceived.values()) counts[v] = (counts[v] || 0) + 1;
+          room.votedCategory = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+        }
+        startNextRound(io, room);
+      });
     }
   });
 }
