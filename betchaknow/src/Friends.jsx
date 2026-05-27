@@ -89,7 +89,7 @@ const css = `
 
   .nav-tab {
     padding:12px 18px; border:none; background:transparent;
-    color:${C.muted}; font-family:'DM Sans',sans-serif;
+    color:${C.muted}; font-family:'Space Grotesk',sans-serif;
     font-size:13px; font-weight:700; cursor:pointer;
     border-radius:10px 10px 0 0; white-space:nowrap;
     display:inline-flex; align-items:center; gap:6px;
@@ -122,7 +122,7 @@ const css = `
     width:100%; padding:11px 16px;
     border-radius:12px; border:1.5px solid ${C.border2};
     background:${C.card}; color:${C.text};
-    font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500;
+    font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:500;
     outline:none; transition:border-color 0.2s;
   }
   .input-row:focus { border-color:${C.a4}; }
@@ -131,7 +131,7 @@ const css = `
   .field-label {
     font-size:11px; font-weight:800; color:${C.muted};
     letter-spacing:0.8px; text-transform:uppercase; margin-bottom:8px;
-    font-family:'DM Sans',sans-serif;
+    font-family:'Space Grotesk',sans-serif;
   }
 
   .section-block { display:flex; flex-direction:column; gap:0; }
@@ -177,7 +177,7 @@ function VIPDot() {
     <span style={{
       background:`linear-gradient(135deg, ${C.a2}, ${C.a6})`, color:"#111",
       fontSize:9, fontWeight:900, padding:"2px 6px", borderRadius:6,
-      letterSpacing:0.5, fontFamily:"'DM Sans',sans-serif",
+      letterSpacing:0.5, fontFamily:"'Space Grotesk',sans-serif",
     }}>VIP</span>
   );
 }
@@ -193,7 +193,7 @@ function RoleBadge({ role }) {
     <span style={{
       background:s.bg, color:s.color,
       fontSize:9, fontWeight:900, padding:"2px 7px", borderRadius:6,
-      letterSpacing:0.5, fontFamily:"'DM Sans',sans-serif", textTransform:"uppercase",
+      letterSpacing:0.5, fontFamily:"'Space Grotesk',sans-serif", textTransform:"uppercase",
     }}>{role}</span>
   );
 }
@@ -432,7 +432,7 @@ function CreateClubModal({ onClose, onCreated }) {
                     border:`1.5px solid ${privacy === p.id ? C.a4 : C.border2}`,
                     background: privacy === p.id ? C.a4 + "22" : C.card2,
                     color: privacy === p.id ? C.a4 : C.muted,
-                    fontWeight:800, fontSize:11, fontFamily:"'DM Sans',sans-serif",
+                    fontWeight:800, fontSize:11, fontFamily:"'Space Grotesk',sans-serif",
                     transition:"all 0.15s",
                   }}>
                     <div style={{ fontSize:20, marginBottom:4 }}>{p.icon}</div>
@@ -451,7 +451,7 @@ function CreateClubModal({ onClose, onCreated }) {
                     border:`1.5px solid ${minLevel === lv ? C.a5 : C.border2}`,
                     background: minLevel === lv ? C.a5 + "22" : "transparent",
                     color: minLevel === lv ? C.a5 : C.muted,
-                    fontWeight:800, fontSize:12, fontFamily:"'DM Sans',sans-serif",
+                    fontWeight:800, fontSize:12, fontFamily:"'Space Grotesk',sans-serif",
                   }}>Lvl {lv}</button>
                 ))}
               </div>
@@ -465,7 +465,7 @@ function CreateClubModal({ onClose, onCreated }) {
                     border:`1.5px solid ${vibe === v.id ? C.a2 : C.border2}`,
                     background: vibe === v.id ? C.a2 + "22" : C.card2,
                     color: vibe === v.id ? C.a2 : C.muted,
-                    fontWeight:800, fontSize:12, fontFamily:"'DM Sans',sans-serif",
+                    fontWeight:800, fontSize:12, fontFamily:"'Space Grotesk',sans-serif",
                     transition:"all 0.15s",
                   }}>
                     <div style={{ fontSize:24, marginBottom:5 }}>{v.icon}</div>
@@ -774,7 +774,7 @@ function FriendsPage() {
 
       <div style={{ background:C.card2, border:`1px solid ${C.border}`, borderRadius:14, padding:14, marginBottom:18, display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
         {!showAdd ? (
-          <button onClick={() => setShowAdd(true)} style={{ padding:"10px 18px", borderRadius:12, border:"none", background:`linear-gradient(135deg, ${C.a4}, ${C.a5})`, color:"#fff", fontWeight:800, fontSize:13, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", boxShadow:`0 4px 14px ${C.a4}44`, display:"inline-flex", alignItems:"center", gap:6 }}>➕ Add Friend</button>
+          <button onClick={() => setShowAdd(true)} style={{ padding:"10px 18px", borderRadius:12, border:"none", background:`linear-gradient(135deg, ${C.a4}, ${C.a5})`, color:"#fff", fontWeight:800, fontSize:13, cursor:"pointer", fontFamily:"'Space Grotesk',sans-serif", boxShadow:`0 4px 14px ${C.a4}44`, display:"inline-flex", alignItems:"center", gap:6 }}>➕ Add Friend</button>
         ) : (
           <>
             <input className="input-row" autoFocus placeholder="Enter exact username…" value={addInput}
@@ -795,7 +795,7 @@ function FriendsPage() {
             border:`1.5px solid ${filter === f.id ? C.a4 : C.border2}`,
             background: filter === f.id ? C.a4+"22" : "transparent",
             color: filter === f.id ? C.a4 : C.muted,
-            fontFamily:"'DM Sans',sans-serif", display:"inline-flex", alignItems:"center", gap:5,
+            fontFamily:"'Space Grotesk',sans-serif", display:"inline-flex", alignItems:"center", gap:5,
           }}>
             {f.label}
             <span style={{ background: filter === f.id ? C.a4+"33" : C.border, padding:"1px 7px", borderRadius:8, fontSize:10 }}>{f.count}</span>
@@ -1211,7 +1211,7 @@ function BrowseClubsPage({ onCreateClub }) {
                   background:club.members>=club.maxMembers?C.border:`linear-gradient(135deg, ${C.a4}, ${C.a5})`,
                   color:club.members>=club.maxMembers?C.muted:"#fff",
                   fontWeight:800, fontSize:13, cursor:club.members>=club.maxMembers?"not-allowed":"pointer",
-                  fontFamily:"'DM Sans',sans-serif",
+                  fontFamily:"'Space Grotesk',sans-serif",
                   boxShadow:club.members>=club.maxMembers?"none":`0 4px 14px ${C.a4}33`,
                 }}>{club.members>=club.maxMembers?"🔒 Club Full":"Request to Join"}</button>
               </div>
@@ -1237,7 +1237,7 @@ export default function FriendsFlow() {
   };
 
   return (
-    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'Space Grotesk',sans-serif", paddingBottom:60 }}>
       <style>{css}</style>
 
       {showCreate && <CreateClubModal onClose={() => setShowCreate(false)} onCreated={handleClubCreated} />}

@@ -134,23 +134,23 @@ function DifficultyTag({ difficulty }) {
       display:"inline-flex", alignItems:"center", gap:3,
       background: d.color + "18", color: d.color, border: `1px solid ${d.color}44`,
       borderRadius:8, padding:"2px 8px", fontSize:10, fontWeight:800,
-      letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'DM Sans',sans-serif",
+      letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Space Grotesk',sans-serif",
     }}>{d.label}</span>
   );
 }
 
 function RewardChip({ reward }) {
   if (reward.type === "xp") return (
-    <span style={{ display:"inline-flex", alignItems:"center", gap:4, background: C.a4+"18", color:C.a4, border:`1px solid ${C.a4}33`, borderRadius:8, padding:"3px 10px", fontSize:12, fontWeight:800, fontFamily:"'DM Sans',sans-serif" }}>⭐ {reward.amount} XP</span>
+    <span style={{ display:"inline-flex", alignItems:"center", gap:4, background: C.a4+"18", color:C.a4, border:`1px solid ${C.a4}33`, borderRadius:8, padding:"3px 10px", fontSize:12, fontWeight:800, fontFamily:"'Space Grotesk',sans-serif" }}>⭐ {reward.amount} XP</span>
   );
   if (reward.type === "coins") return (
-    <span style={{ display:"inline-flex", alignItems:"center", gap:4, background: C.a2+"18", color:C.a2, border:`1px solid ${C.a2}33`, borderRadius:8, padding:"3px 10px", fontSize:12, fontWeight:800, fontFamily:"'DM Sans',sans-serif" }}><CoinIcon size={12} /> {reward.amount}</span>
+    <span style={{ display:"inline-flex", alignItems:"center", gap:4, background: C.a2+"18", color:C.a2, border:`1px solid ${C.a2}33`, borderRadius:8, padding:"3px 10px", fontSize:12, fontWeight:800, fontFamily:"'Space Grotesk',sans-serif" }}><CoinIcon size={12} /> {reward.amount}</span>
   );
   if (reward.type === "bp") return (
-    <span style={{ display:"inline-flex", alignItems:"center", gap:4, background: C.a5+"18", color:C.a5, border:`1px solid ${C.a5}33`, borderRadius:8, padding:"3px 10px", fontSize:12, fontWeight:800, fontFamily:"'DM Sans',sans-serif" }}>🎯 {reward.amount} BP</span>
+    <span style={{ display:"inline-flex", alignItems:"center", gap:4, background: C.a5+"18", color:C.a5, border:`1px solid ${C.a5}33`, borderRadius:8, padding:"3px 10px", fontSize:12, fontWeight:800, fontFamily:"'Space Grotesk',sans-serif" }}>🎯 {reward.amount} BP</span>
   );
   if (reward.type === "cosmetic") return (
-    <span style={{ display:"inline-flex", alignItems:"center", gap:4, background: C.a3+"18", color:C.a3, border:`1px solid ${C.a3}33`, borderRadius:8, padding:"3px 10px", fontSize:12, fontWeight:800, fontFamily:"'DM Sans',sans-serif" }}>{reward.icon} {reward.name}</span>
+    <span style={{ display:"inline-flex", alignItems:"center", gap:4, background: C.a3+"18", color:C.a3, border:`1px solid ${C.a3}33`, borderRadius:8, padding:"3px 10px", fontSize:12, fontWeight:800, fontFamily:"'Space Grotesk',sans-serif" }}>{reward.icon} {reward.name}</span>
   );
   return null;
 }
@@ -177,7 +177,7 @@ function ChallengeCard({ challenge, onClaim, accent }) {
 
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ display:"flex", justifyContent:"space-between", gap:8, alignItems:"flex-start", marginBottom:4, flexWrap:"wrap" }}>
-            <h4 style={{ fontFamily:"'DM Sans',sans-serif", fontSize:15, fontWeight:800, color: challenge.claimed ? C.muted : C.text }}>{challenge.name}</h4>
+            <h4 style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:15, fontWeight:800, color: challenge.claimed ? C.muted : C.text }}>{challenge.name}</h4>
             <DifficultyTag difficulty={challenge.difficulty} />
           </div>
           <p style={{ fontSize:12, color:C.muted, fontWeight:500, lineHeight:1.4 }}>{challenge.desc}</p>
@@ -210,7 +210,7 @@ function ChallengeCard({ challenge, onClaim, accent }) {
           <button onClick={() => onClaim(challenge)} style={{
             padding:"8px 18px", borderRadius:10, border:"none",
             background:`linear-gradient(135deg, ${C.a3}, ${C.a4})`, color:"#fff", fontWeight:900, fontSize:13, cursor:"pointer",
-            fontFamily:"'DM Sans',sans-serif", boxShadow:`0 4px 14px ${C.a3}55`,
+            fontFamily:"'Space Grotesk',sans-serif", boxShadow:`0 4px 14px ${C.a3}55`,
             animation:"pulse 1.6s ease-in-out infinite",
           }}>🎁 Claim</button>
         ) : (
@@ -307,7 +307,7 @@ function ClaimPopup({ data, onClose }) {
         <button onClick={onClose} style={{
           padding:"12px 32px", borderRadius:12, border:"none",
           background:`linear-gradient(135deg, ${C.a3}, ${C.a4})`, color:"#fff", fontWeight:900, fontSize:14, cursor:"pointer",
-          fontFamily:"'DM Sans',sans-serif", boxShadow:`0 4px 18px ${C.a3}44`,
+          fontFamily:"'Space Grotesk',sans-serif", boxShadow:`0 4px 18px ${C.a3}44`,
         }}>Awesome!</button>
       </div>
     </div>
@@ -361,7 +361,7 @@ export default function ChallengesPage() {
   const loggedIn = isLoggedIn();
 
   return (
-    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'Space Grotesk',sans-serif", paddingBottom:60 }}>
       <style>{css}</style>
 
       <div style={{
@@ -432,7 +432,7 @@ export default function ChallengesPage() {
                   color: tab===t.id ? C.text : C.muted,
                   borderRadius:"10px 10px 0 0",
                   borderBottom: tab===t.id ? `2px solid ${C.a4}` : "2px solid transparent",
-                  fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:700, cursor:"pointer",
+                  fontFamily:"'Space Grotesk',sans-serif", fontSize:13, fontWeight:700, cursor:"pointer",
                   display:"inline-flex", alignItems:"center", gap:6,
                 }}>
                   {t.label}

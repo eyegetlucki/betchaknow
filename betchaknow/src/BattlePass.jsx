@@ -133,7 +133,7 @@ function RewardTile({ reward, claimed, claimable, locked, isPremium, onClaim }) 
         animation: claimable && !claimed ? "float 2.5s ease-in-out infinite" : "none",
       }}>{reward.icon}</div>
 
-      <div style={{ fontSize:10, fontWeight:700, color: claimed ? C.muted : r.color, lineHeight:1.2, fontFamily:"'DM Sans',sans-serif", maxWidth:80, overflow:"hidden" }}>{reward.name}</div>
+      <div style={{ fontSize:10, fontWeight:700, color: claimed ? C.muted : r.color, lineHeight:1.2, fontFamily:"'Space Grotesk',sans-serif", maxWidth:80, overflow:"hidden" }}>{reward.name}</div>
 
       {claimed && (
         <div style={{ position:"absolute", top:6, right:6, width:18, height:18, borderRadius:"50%", background:C.a3, color:"#0a1a0c", fontSize:11, fontWeight:900, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:`0 2px 6px ${C.a3}66` }}>✓</div>
@@ -201,7 +201,7 @@ function RewardPopup({ reward, track, onClose }) {
         <div style={{ fontSize:11, color:r.color, fontWeight:900, letterSpacing:1.5, textTransform:"uppercase", marginBottom:6 }}>{track === "prem" ? "⭐ Premium Reward" : "Free Reward"} · {reward.rarity}</div>
         <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:28, color:C.text, marginBottom:8 }}>{reward.name}</h2>
         <p style={{ fontSize:13, color:C.muted, fontWeight:500, marginBottom:20 }}>Added to your inventory!</p>
-        <button onClick={onClose} style={{ padding:"12px 28px", borderRadius:12, border:"none", background:`linear-gradient(135deg, ${r.color}, ${r.color}cc)`, color:"#fff", fontWeight:800, fontSize:14, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", boxShadow:`0 4px 18px ${r.glow}` }}>Awesome!</button>
+        <button onClick={onClose} style={{ padding:"12px 28px", borderRadius:12, border:"none", background:`linear-gradient(135deg, ${r.color}, ${r.color}cc)`, color:"#fff", fontWeight:800, fontSize:14, cursor:"pointer", fontFamily:"'Space Grotesk',sans-serif", boxShadow:`0 4px 18px ${r.glow}` }}>Awesome!</button>
       </div>
     </div>
   );
@@ -241,8 +241,8 @@ function VIPModal({ open, onClose, onPurchase }) {
           </div>
 
           <div style={{ display:"flex", gap:10 }}>
-            <button onClick={onClose} style={{ flex:1, padding:"13px", borderRadius:12, border:`1.5px solid ${C.border2}`, background:"transparent", color:C.muted, fontWeight:800, fontSize:13, fontFamily:"'DM Sans',sans-serif", cursor:"pointer" }}>Maybe Later</button>
-            <button onClick={onPurchase} style={{ flex:2, padding:"13px", borderRadius:12, border:"none", background:`linear-gradient(135deg, ${C.a2}, ${C.a6})`, color:"#111", fontWeight:900, fontSize:14, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", boxShadow:`0 4px 18px ${C.a2}55` }}>🔒 Unlock VIP — $4.99</button>
+            <button onClick={onClose} style={{ flex:1, padding:"13px", borderRadius:12, border:`1.5px solid ${C.border2}`, background:"transparent", color:C.muted, fontWeight:800, fontSize:13, fontFamily:"'Space Grotesk',sans-serif", cursor:"pointer" }}>Maybe Later</button>
+            <button onClick={onPurchase} style={{ flex:2, padding:"13px", borderRadius:12, border:"none", background:`linear-gradient(135deg, ${C.a2}, ${C.a6})`, color:"#111", fontWeight:900, fontSize:14, cursor:"pointer", fontFamily:"'Space Grotesk',sans-serif", boxShadow:`0 4px 18px ${C.a2}55` }}>🔒 Unlock VIP — $4.99</button>
           </div>
 
           <p style={{ fontSize:11, color:C.muted2, textAlign:"center", marginTop:12, fontWeight:500 }}>Secure checkout via Stripe · Auto-renews monthly · Cancel anytime in settings</p>
@@ -311,7 +311,7 @@ export default function BattlePassPage() {
   const xpPct = Math.round((xp / xpPerTier) * 100);
 
   return (
-    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'Space Grotesk',sans-serif", paddingBottom:60 }}>
       <style>{css}</style>
 
       <div style={{ background:`linear-gradient(180deg, ${C.a2}11 0%, ${C.a5}08 40%, transparent 100%)`, borderBottom:`1px solid ${C.border}`, padding:"28px 24px 0", position:"relative", overflow:"hidden" }}>
@@ -338,7 +338,7 @@ export default function BattlePassPage() {
               </div>
             ) : (
               <button onClick={() => setVipModal(true)} className="premium-card"
-                style={{ border:"none", borderRadius:14, padding:"10px 18px", cursor:"pointer", display:"flex", alignItems:"center", gap:10, color:C.text, fontFamily:"'DM Sans',sans-serif" }}>
+                style={{ border:"none", borderRadius:14, padding:"10px 18px", cursor:"pointer", display:"flex", alignItems:"center", gap:10, color:C.text, fontFamily:"'Space Grotesk',sans-serif" }}>
                 <span style={{ fontSize:24 }}>⭐</span>
                 <div style={{ textAlign:"left", position:"relative", zIndex:2 }}>
                   <div style={{ fontSize:13, color:C.a2, fontWeight:900, lineHeight:1 }}>Unlock VIP</div>
@@ -402,7 +402,7 @@ export default function BattlePassPage() {
                 color: view===v.id ? C.text : C.muted,
                 borderRadius:"10px 10px 0 0",
                 borderBottom: view===v.id ? `2px solid ${C.a4}` : "2px solid transparent",
-                fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap",
+                fontFamily:"'Space Grotesk',sans-serif", fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap",
               }}>{v.label}</button>
             ))}
           </div>
@@ -447,7 +447,7 @@ export default function BattlePassPage() {
                     if (r.tier <= tier && !claimedFree.includes(r.tier)) setClaimedFree(prev => [...prev, r.tier]);
                     if (hasVIP && r.tier <= tier && !claimedPrem.includes(r.tier)) setClaimedPrem(prev => [...prev, r.tier]);
                   });
-                }} style={{ padding:"12px 24px", borderRadius:12, border:"none", background:`linear-gradient(135deg, ${C.a3}, ${C.a4})`, color:"#fff", fontWeight:900, fontSize:14, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", boxShadow:`0 4px 18px ${C.a3}44` }}>
+                }} style={{ padding:"12px 24px", borderRadius:12, border:"none", background:`linear-gradient(135deg, ${C.a3}, ${C.a4})`, color:"#fff", fontWeight:900, fontSize:14, cursor:"pointer", fontFamily:"'Space Grotesk',sans-serif", boxShadow:`0 4px 18px ${C.a3}44` }}>
                   🎁 Claim All ({unclaimedFree + unclaimedPrem})
                 </button>
               </div>

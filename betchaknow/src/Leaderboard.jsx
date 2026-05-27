@@ -182,7 +182,7 @@ function VIPDot() {
     <span style={{
       background:`linear-gradient(135deg, ${C.a2}, ${C.a6})`, color:"#111",
       fontSize:9, fontWeight:900, padding:"2px 6px", borderRadius:6,
-      letterSpacing:0.5, fontFamily:"'DM Sans',sans-serif",
+      letterSpacing:0.5, fontFamily:"'Space Grotesk',sans-serif",
       boxShadow:`0 0 6px ${C.a2}66`,
     }}>VIP</span>
   );
@@ -246,7 +246,7 @@ function Podium({ top3 }) {
 
             <div style={{ textAlign:"center", minWidth:0, maxWidth:120 }}>
               <div style={{
-                fontFamily:"'DM Sans',sans-serif", fontWeight:800,
+                fontFamily:"'Space Grotesk',sans-serif", fontWeight:800,
                 fontSize: place === 1 ? 14 : 13, color: p.isMe ? C.a4 : C.text,
                 whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
               }}>{p.username}{p.isMe && " (You)"}</div>
@@ -503,7 +503,7 @@ export default function LeaderboardPage() {
   const showLocation = view === "state" ? "state" : "country";
 
   return (
-    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:90 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'Space Grotesk',sans-serif", paddingBottom:90 }}>
       <style>{css}</style>
 
       <div style={{
@@ -557,7 +557,7 @@ export default function LeaderboardPage() {
                 color: view===t.id ? C.text : C.muted,
                 borderRadius:"10px 10px 0 0",
                 borderBottom: view===t.id ? `2px solid ${C.a4}` : "2px solid transparent",
-                fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:700,
+                fontFamily:"'Space Grotesk',sans-serif", fontSize:13, fontWeight:700,
                 cursor:"pointer", whiteSpace:"nowrap",
                 display:"flex", flexDirection:"column", alignItems:"center", gap:1,
               }}>

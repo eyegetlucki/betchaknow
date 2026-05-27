@@ -78,7 +78,6 @@ function calcPayout(player, correctPlayerId, allPlayers) {
 }
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700;800;900&display=swap');
   * { box-sizing: border-box; }
   @keyframes fadeUp      { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
   @keyframes popIn       { from{opacity:0;transform:scale(0.75)} to{opacity:1;transform:scale(1)} }
@@ -102,10 +101,10 @@ const css = `
   @keyframes leadGlow    { 0%,100%{box-shadow:0 0 10px var(--glow-color, #ffd93d55), 0 0 0 1px var(--glow-color, #ffd93d33)} 50%{box-shadow:0 0 22px var(--glow-color, #ffd93d88), 0 0 0 1px var(--glow-color, #ffd93d66)} }
   @keyframes barGrow     { from{width:0%} to{width:var(--bar-w,0%)} }
   @keyframes crownFloat  { 0%,100%{transform:translateY(0) rotate(-5deg)} 50%{transform:translateY(-4px) rotate(5deg)} }
-  button { font-family:'Nunito',sans-serif; cursor:pointer; transition:transform 0.12s,box-shadow 0.12s; }
+  button { font-family:'Space Grotesk',sans-serif; cursor:pointer; transition:transform 0.12s,box-shadow 0.12s; }
   button:not(:disabled):hover  { transform:scale(1.03) !important; }
   button:not(:disabled):active { transform:scale(0.96) !important; }
-  input  { font-family:'Nunito',sans-serif; }
+  input  { font-family:'Space Grotesk',sans-serif; }
   ::-webkit-scrollbar { width:5px; }
   ::-webkit-scrollbar-thumb { background:#2e2b4a; border-radius:3px; }
 `;
@@ -122,11 +121,15 @@ function Btn({ children, color, outline, onClick, disabled, style={} }) {
       style={{
         width:"100%", padding:"13px 20px", borderRadius:14,
         border: outline ? `2px solid ${color}` : "none",
-        background: disabled ? "#2a2840" : outline ? "transparent" : color,
+        background: disabled ? "#2a2840" : outline ? `${color}18` : `linear-gradient(135deg, ${color}, ${color}cc)`,
         color: disabled ? C.muted : outline ? color : "#fff",
         fontSize:15, fontWeight:800, letterSpacing:0.4,
-        boxShadow: disabled||outline ? "none" : `0 4px 18px ${color}55`,
-        opacity: disabled ? 0.6 : 1,
+        fontFamily:"'Space Grotesk',sans-serif",
+        boxShadow: disabled ? "none" : outline
+          ? `0 0 12px ${color}33, inset 0 0 12px ${color}11`
+          : `0 4px 24px ${color}66, 0 0 0 1px ${color}22, inset 0 1px 0 rgba(255,255,255,0.12)`,
+        opacity: disabled ? 0.55 : 1,
+        transition:"box-shadow 0.2s, transform 0.12s",
         ...style,
       }}
     >{children}</button>
@@ -136,9 +139,12 @@ function Btn({ children, color, outline, onClick, disabled, style={} }) {
 function Card({ children, style={} }) {
   return (
     <div style={{
-      background:C.card, border:`1px solid ${C.cardBorder}`,
+      background:"rgba(16,14,28,0.78)",
+      backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
+      border:"1px solid rgba(255,255,255,0.08)",
       borderRadius:24, padding:28, width:"100%", maxWidth:560,
-      boxShadow:"0 12px 60px #0009", position:"relative", zIndex:1, ...style,
+      boxShadow:"0 16px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07)",
+      position:"relative", zIndex:1, ...style,
     }}>{children}</div>
   );
 }
@@ -185,10 +191,10 @@ function ScorePill({ player, showDelta, delta }) {
       borderRadius:24, padding:"5px 12px", position:"relative",
     }}>
       <PlayerAvatar name={player.name} color={player.color} avatar={player.avatar} size={26} />
-      <span style={{ color:C.text, fontWeight:800, fontSize:13, fontFamily:"'Nunito',sans-serif" }}>
+      <span style={{ color:C.text, fontWeight:800, fontSize:13, fontFamily:"'Space Grotesk',sans-serif" }}>
         {player.name}
       </span>
-      <span style={{ color:C.accent2, fontWeight:900, fontSize:13, fontFamily:"'Boogaloo',cursive" }}>
+      <span style={{ color:C.accent2, fontWeight:700, fontSize:12, fontFamily:"'Orbitron',monospace", letterSpacing:0.5 }}>
         {player.points}
       </span>
       {player.streak >= 3 && (
@@ -552,7 +558,7 @@ function QuestionScreen({ question, players, myPlayer, myBet: myBetProp, timerSe
             </div>
           )}
         </div>
-        <div style={{ color:C.text, fontWeight:800, fontSize:18, lineHeight:1.4, fontFamily:"'Nunito',sans-serif" }}>
+        <div style={{ color:C.text, fontWeight:800, fontSize:18, lineHeight:1.4, fontFamily:"'Space Grotesk',sans-serif" }}>
           {question.q}
         </div>
       </div>
@@ -1137,7 +1143,7 @@ function MobileScoreboard({ players }) {
               {p.name}{p.isMe ? " ★" : ""}
             </div>
             {/* score */}
-            <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:15, color: isLeader ? C.accent2 : C.text, lineHeight:1 }}>
+            <div style={{ fontFamily:"'Orbitron',monospace", fontSize:11, fontWeight:700, color: isLeader ? C.accent2 : C.text, lineHeight:1, letterSpacing:0.5 }}>
               {p.points.toLocaleString()}
             </div>
             {/* mini bar */}
@@ -1332,7 +1338,7 @@ export default function GameFlow({ onExit, initialRoundData }) {
   const isMobile = useIsMobile();
 
   return (
-    <div style={{ minHeight:"100vh", background:"transparent", position:"relative", overflow:"hidden", fontFamily:"'Nunito',sans-serif" }}>
+    <div style={{ minHeight:"100vh", background:"transparent", position:"relative", overflow:"hidden", fontFamily:"'Space Grotesk',sans-serif" }}>
       <style>{css}</style>
       {particles.map((p,i) => <Particle key={i} style={{...p, animationDelay:`${i*0.9}s`}} />)}
 
@@ -1344,7 +1350,7 @@ export default function GameFlow({ onExit, initialRoundData }) {
             background:C.accent1+"22", border:`1px solid ${C.accent1}66`,
             borderRadius:10, padding:"6px 14px",
             color:C.accent1, fontSize:13, fontWeight:800,
-            cursor:"pointer", fontFamily:"'Nunito',sans-serif",
+            cursor:"pointer", fontFamily:"'Space Grotesk',sans-serif",
           }}
         >✕ Leave</button>
       )}
@@ -1422,11 +1428,13 @@ export default function GameFlow({ onExit, initialRoundData }) {
                     </div>
                     {/* score */}
                     <div style={{
-                      fontFamily:"'Boogaloo',cursive",
-                      fontSize: isLeader ? 20 : 16,
+                      fontFamily:"'Orbitron',monospace",
+                      fontSize: isLeader ? 15 : 12,
+                      fontWeight:700,
+                      letterSpacing:0.5,
                       color: isLeader ? C.accent2 : C.text,
                       lineHeight:1,
-                      textShadow: isLeader ? `0 0 12px ${C.accent2}88` : "none",
+                      textShadow: isLeader ? `0 0 14px ${C.accent2}aa` : "none",
                     }}>
                       {p.points.toLocaleString()}
                     </div>

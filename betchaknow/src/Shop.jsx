@@ -163,7 +163,7 @@ const css = `
   .nav-btn {
     padding:10px 16px; border-radius:12px; border:none;
     background:transparent; color:${C.muted}; cursor:pointer;
-    font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700;
+    font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700;
     transition:all 0.15s; white-space:nowrap;
     display:inline-flex; align-items:center; gap:6px;
   }
@@ -184,7 +184,7 @@ const css = `
     display:inline-flex; align-items:center; gap:6px;
     padding:8px 14px; border-radius:12px;
     background:linear-gradient(135deg, ${C.a2}, ${C.a6});
-    color:#111; font-weight:900; font-family:'DM Sans',sans-serif;
+    color:#111; font-weight:900; font-family:'Space Grotesk',sans-serif;
     font-size:14px; border:none; cursor:pointer;
     box-shadow:0 4px 14px ${C.a2}44;
     transition:transform 0.12s;
@@ -194,7 +194,7 @@ const css = `
 
   .btn-primary {
     width:100%; padding:10px; border-radius:10px; border:none;
-    font-family:'DM Sans',sans-serif; font-weight:800; font-size:13px;
+    font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:13px;
     cursor:pointer; transition:transform 0.12s, opacity 0.15s;
     display:flex; align-items:center; justify-content:center; gap:6px;
   }
@@ -224,7 +224,7 @@ const css = `
     width:100%; padding:7px; border-radius:8px;
     border:1px solid ${C.border2}; background:transparent;
     color:${C.muted}; cursor:pointer;
-    font-family:'DM Sans',sans-serif; font-weight:700; font-size:11px;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:11px;
     display:flex; align-items:center; justify-content:center; gap:5px;
     margin-bottom:8px; transition:color 0.15s, background 0.15s;
   }
@@ -242,7 +242,7 @@ function RarityBadge({ rarity }) {
       border: `1px solid ${r.color}55`,
       borderRadius:20, padding:"2px 8px",
       fontSize:10, fontWeight:800, letterSpacing:0.5,
-      fontFamily:"'DM Sans',sans-serif", textTransform:"uppercase",
+      fontFamily:"'Space Grotesk',sans-serif", textTransform:"uppercase",
     }}>{r.name}</span>
   );
 }
@@ -276,7 +276,7 @@ function ItemCard({ item, owned, equipped, balance, onClick, onPreview }) {
             position:"absolute", top:-4, right:-4, zIndex:2,
             background:C.a3, color:"#0a1a0c", borderRadius:10,
             padding:"3px 8px", fontSize:10, fontWeight:900,
-            fontFamily:"'DM Sans',sans-serif", letterSpacing:0.5,
+            fontFamily:"'Space Grotesk',sans-serif", letterSpacing:0.5,
             boxShadow:`0 2px 8px ${C.a3}66`,
           }}>✓ EQUIPPED</div>
         )}
@@ -295,7 +295,7 @@ function ItemCard({ item, owned, equipped, balance, onClick, onPreview }) {
         <RarityBadge rarity={item.rarity} />
 
         <h4 style={{ fontWeight:800, fontSize:14, color:C.text, marginTop:6, marginBottom:2 }}>{item.name}</h4>
-        <p style={{ fontSize:11, color:C.muted, fontFamily:"'DM Sans',sans-serif", lineHeight:1.4, marginBottom:8, minHeight:30 }}>
+        <p style={{ fontSize:11, color:C.muted, fontFamily:"'Space Grotesk',sans-serif", lineHeight:1.4, marginBottom:8, minHeight:30 }}>
           {item.desc}
         </p>
 
@@ -362,14 +362,14 @@ function CoinPackCard({ pack, onBuy }) {
 
       <div style={{ textAlign:"center", marginBottom:14 }}>
         <div style={{ fontSize:42, marginBottom:6, animation:"float 3s ease-in-out infinite" }}>{pack.icon}</div>
-        <div style={{ fontWeight:800, fontSize:14, color:C.muted, fontFamily:"'DM Sans',sans-serif" }}>{pack.label}</div>
+        <div style={{ fontWeight:800, fontSize:14, color:C.muted, fontFamily:"'Space Grotesk',sans-serif" }}>{pack.label}</div>
       </div>
 
       <div style={{ textAlign:"center", marginBottom:14 }}>
         <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:36, color:C.a2, lineHeight:1, marginBottom:2 }}>
           {pack.coins.toLocaleString()}
         </div>
-        <div style={{ fontSize:11, color:C.muted, fontWeight:700, fontFamily:"'DM Sans',sans-serif", letterSpacing:1, textTransform:"uppercase" }}>
+        <div style={{ fontSize:11, color:C.muted, fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", letterSpacing:1, textTransform:"uppercase" }}>
           BK Bucks
         </div>
         {pack.bonus > 0 && (
@@ -412,7 +412,7 @@ function PurchaseModal({ item, balance, onConfirm, onCancel }) {
           }}>{item.icon}</div>
           <RarityBadge rarity={item.rarity} />
           <h3 style={{ fontFamily:"'Boogaloo',cursive", fontSize:26, marginTop:10, color:C.text }}>{item.name}</h3>
-          <p style={{ fontSize:13, color:C.muted, marginTop:6, fontFamily:"'DM Sans',sans-serif", fontWeight:500 }}>{item.desc}</p>
+          <p style={{ fontSize:13, color:C.muted, marginTop:6, fontFamily:"'Space Grotesk',sans-serif", fontWeight:500 }}>{item.desc}</p>
         </div>
 
         <div style={{ background:C.card2, border:`1px solid ${C.border}`, borderRadius:14, padding:16, marginBottom:16 }}>
@@ -528,7 +528,7 @@ function PreviewModal({ item, owned, equipped, balance, onAction, onClose }) {
           border:`1px solid ${C.border2}`,
           background:C.card2, color:C.muted, fontSize:16, cursor:"pointer",
           display:"flex", alignItems:"center", justifyContent:"center",
-          fontFamily:"'DM Sans',sans-serif", fontWeight:900, zIndex:2,
+          fontFamily:"'Space Grotesk',sans-serif", fontWeight:900, zIndex:2,
         }}>✕</button>
 
         <div style={{ position:"relative", zIndex:1 }}>
@@ -668,7 +668,7 @@ function Toast({ msg, type="success" }) {
       background:C.card, border:`1.5px solid ${c.border}`,
       borderRadius:14, padding:"12px 22px",
       display:"flex", alignItems:"center", gap:10,
-      color:c.border, fontWeight:700, fontFamily:"'DM Sans',sans-serif",
+      color:c.border, fontWeight:700, fontFamily:"'Space Grotesk',sans-serif",
       fontSize:14, zIndex:100,
       boxShadow:`0 8px 32px ${c.border}33`,
       animation:"popIn 0.3s cubic-bezier(.17,.67,.35,1.3)",
@@ -807,7 +807,7 @@ export default function ShopPage() {
   };
 
   return (
-    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'DM Sans',sans-serif", paddingBottom:60 }}>
+    <div style={{ minHeight:"100vh", background:"transparent", color:C.text, fontFamily:"'Space Grotesk',sans-serif", paddingBottom:60 }}>
       <style>{css}</style>
       <Toast msg={toast?.msg} type={toast?.type} />
 

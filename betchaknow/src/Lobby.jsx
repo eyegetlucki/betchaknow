@@ -58,7 +58,7 @@ function Badge({ children, color }) {
       borderRadius: 20,
       padding: "2px 10px",
       fontSize: 12,
-      fontFamily: "'Nunito', sans-serif",
+      fontFamily: "'Space Grotesk', sans-serif",
       fontWeight: 700,
     }}>{children}</span>
   );
@@ -116,7 +116,7 @@ function PlayerChip({ player, onKick }) {
         fontSize: 13,
         fontWeight: 900,
         color: "#fff",
-        fontFamily: "'Nunito', sans-serif",
+        fontFamily: "'Space Grotesk', sans-serif",
         overflow: "hidden",
         flexShrink: 0,
       }}>
@@ -127,7 +127,7 @@ function PlayerChip({ player, onKick }) {
             : player.name[0]
         }
       </div>
-      <span style={{ color: COLORS.text, fontFamily: "'Nunito', sans-serif", fontWeight: 700, fontSize: 14 }}>
+      <span style={{ color: COLORS.text, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 14 }}>
         {player.name}
       </span>
       {player.isHost && <Badge color={COLORS.accent2}>HOST</Badge>}
@@ -145,7 +145,7 @@ function PlayerChip({ player, onKick }) {
           style={{
             background: "none", border: "none", padding: "0 2px",
             color: COLORS.accent1, fontSize: 14, cursor: "pointer",
-            lineHeight: 1, fontFamily: "'Nunito', sans-serif",
+            lineHeight: 1, fontFamily: "'Space Grotesk', sans-serif",
           }}
           title="Kick bot"
         >✕</button>
@@ -329,7 +329,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
     root: {
       minHeight: "100vh",
       background: "transparent",
-      fontFamily: "'Nunito', sans-serif",
+      fontFamily: "'Space Grotesk', sans-serif",
       position: "relative",
       overflow: "hidden",
       display: "flex",
@@ -375,7 +375,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
       color: outline ? color : "#fff",
       fontSize: 16,
       fontWeight: 800,
-      fontFamily: "'Nunito', sans-serif",
+      fontFamily: "'Space Grotesk', sans-serif",
       cursor: "pointer",
       transition: "transform 0.1s, box-shadow 0.1s",
       boxShadow: outline ? "none" : `0 4px 20px ${color}55`,
@@ -389,7 +389,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
       background: "#13121f",
       color: COLORS.text,
       fontSize: 15,
-      fontFamily: "'Nunito', sans-serif",
+      fontFamily: "'Space Grotesk', sans-serif",
       fontWeight: 700,
       outline: "none",
       boxSizing: "border-box",
@@ -421,7 +421,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
       color: COLORS.muted,
       cursor: "pointer",
       fontSize: 14,
-      fontFamily: "'Nunito', sans-serif",
+      fontFamily: "'Space Grotesk', sans-serif",
       fontWeight: 700,
       padding: "0 0 16px 0",
       display: "flex",
@@ -643,7 +643,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
                 color: categories[cat.id] ? COLORS.accent4 : COLORS.muted,
                 fontSize: 13,
                 fontWeight: 700,
-                fontFamily: "'Nunito', sans-serif",
+                fontFamily: "'Space Grotesk', sans-serif",
                 cursor: "pointer",
                 transition: "all 0.15s",
               }}
@@ -691,7 +691,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
         )}
 
         {connectError && (
-          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: COLORS.accent1 + "18", border: `1px solid ${COLORS.accent1}44`, color: COLORS.accent1, fontSize: 13, fontWeight: 700, fontFamily: "'Nunito', sans-serif" }}>
+          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: COLORS.accent1 + "18", border: `1px solid ${COLORS.accent1}44`, color: COLORS.accent1, fontSize: 13, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>
             ⚠ {connectError}
           </div>
         )}
@@ -732,7 +732,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
               style={{
                 background: "none", border: "none", padding: "0 0 8px 0",
                 color: COLORS.muted, fontSize: 13, fontWeight: 700,
-                fontFamily: "'Nunito', sans-serif", cursor: "pointer",
+                fontFamily: "'Space Grotesk', sans-serif", cursor: "pointer",
                 display: "flex", alignItems: "center", gap: 4,
               }}
             >← Back</button>
@@ -828,7 +828,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
                             background: botDifficulty === d.id ? d.color + "33" : "transparent",
                             color: botDifficulty === d.id ? d.color : COLORS.muted,
                             fontSize: 12, fontWeight: 800,
-                            fontFamily: "'Nunito', sans-serif", cursor: "pointer",
+                            fontFamily: "'Space Grotesk', sans-serif", cursor: "pointer",
                             transition: "background 0.15s, color 0.15s",
                           }}
                         >{d.label}</button>
@@ -840,7 +840,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
                           padding: "7px 16px", borderRadius: 20,
                           border: `1.5px solid ${COLORS.muted}44`,
                           background: "transparent", color: COLORS.muted,
-                          fontSize: 13, fontWeight: 700, fontFamily: "'Nunito', sans-serif",
+                          fontSize: 13, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif",
                           cursor: "pointer",
                         }}
                         onClick={() => getSocket().emit("addBot", { difficulty: botDifficulty })}
@@ -871,7 +871,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
                 color: tab === t ? COLORS.accent4 : COLORS.muted,
                 fontSize: 12,
                 fontWeight: 800,
-                fontFamily: "'Nunito', sans-serif",
+                fontFamily: "'Space Grotesk', sans-serif",
                 cursor: "pointer",
                 textTransform: "capitalize",
                 transition: "all 0.15s",
@@ -926,7 +926,7 @@ export default function LobbyFlow({ onStartGame, onLogin, loggedIn }) {
                   color: categories[cat.id] ? COLORS.accent4 : COLORS.muted,
                   fontSize: 14,
                   fontWeight: 700,
-                  fontFamily: "'Nunito', sans-serif",
+                  fontFamily: "'Space Grotesk', sans-serif",
                   cursor: isHost ? "pointer" : "not-allowed",
                   transition: "all 0.15s",
                 }}

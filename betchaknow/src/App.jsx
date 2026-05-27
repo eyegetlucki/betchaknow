@@ -119,13 +119,11 @@ const SECTION_LABELS = {
 };
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=DM+Sans:wght@400;600;700;800&display=swap');
-
   .bk-nav-btn {
     flex:1; border:none; background:transparent; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:3px; padding:8px 2px; transition:color 0.15s;
-    font-family:'DM Sans',sans-serif;
+    font-family:'Space Grotesk',sans-serif;
     color:#6b6890;
   }
   .bk-nav-btn.active { color:#4d96ff; }
@@ -147,7 +145,7 @@ const css = `
   .bk-range:disabled { opacity:0.3; cursor:not-allowed; }
   .bk-range:disabled::-webkit-slider-thumb { cursor:not-allowed; }
 
-  .bk-profile-menu-btn { display:flex; align-items:center; gap:8px; width:100%; padding:8px 12px; background:none; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.12s; }
+  .bk-profile-menu-btn { display:flex; align-items:center; gap:8px; width:100%; padding:8px 12px; background:none; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif; transition:background 0.12s; }
   .bk-profile-menu-btn:hover { background:#ffffff0d; }
 `;
 
@@ -187,7 +185,7 @@ function SettingsPanel({ settings, onUpdate, onClose }) {
       width:"100%", maxWidth:420,
       boxShadow:"0 32px 80px #000000cc",
       animation:"bk-popIn 0.25s cubic-bezier(.17,.67,.35,1.15)",
-      fontFamily:"'DM Sans',sans-serif",
+      fontFamily:"'Space Grotesk',sans-serif",
     },
     sectionLabel: {
       fontSize:10, fontWeight:800, letterSpacing:1.5, textTransform:"uppercase",
@@ -334,7 +332,7 @@ function UsernameSetup({ onDone }) {
         boxShadow:"0 32px 80px #000000cc",
         animation:"bk-popIn 0.35s cubic-bezier(.17,.67,.35,1.15)",
         textAlign:"center",
-        fontFamily:"'DM Sans',sans-serif",
+        fontFamily:"'Space Grotesk',sans-serif",
       }}>
         <div style={{ fontSize:52, marginBottom:16, animation:"bk-float 3s ease-in-out infinite" }}>🎮</div>
 
@@ -361,7 +359,7 @@ function UsernameSetup({ onDone }) {
                 width:"100%", padding:"13px 16px 13px 44px",
                 background:"#0d0b1a", border:`1.5px solid ${error ? "#ff6b6b" : username.length > 0 && valid ? "#6bcb77" : "#2e2b4a"}`,
                 borderRadius:12, color:"#f0eeff",
-                fontFamily:"'DM Sans',sans-serif", fontSize:15, fontWeight:600,
+                fontFamily:"'Space Grotesk',sans-serif", fontSize:15, fontWeight:600,
                 outline:"none", boxSizing:"border-box",
                 transition:"border-color 0.2s",
               }}
@@ -384,7 +382,7 @@ function UsernameSetup({ onDone }) {
             width:"100%", padding:"14px", borderRadius:14, border:"none", cursor: valid ? "pointer" : "not-allowed",
             background: valid ? "linear-gradient(135deg, #4d96ff, #6e56cf)" : "#1e1b35",
             color: valid ? "#fff" : "#4a4768",
-            fontFamily:"'DM Sans',sans-serif", fontSize:15, fontWeight:800,
+            fontFamily:"'Space Grotesk',sans-serif", fontSize:15, fontWeight:800,
             boxShadow: valid ? "0 6px 24px #4d96ff44" : "none",
             transition:"all 0.2s",
             display:"flex", alignItems:"center", justifyContent:"center", gap:8,
@@ -438,7 +436,7 @@ function AuthGate({ section, onLogin, onClose }) {
         boxShadow:"0 32px 80px #000000cc, 0 0 0 1px #ffffff08",
         animation:"bk-popIn 0.35s cubic-bezier(.17,.67,.35,1.15)",
         textAlign:"center",
-        fontFamily:"'DM Sans',sans-serif",
+        fontFamily:"'Space Grotesk',sans-serif",
       }}>
         <div style={{
           width:72, height:72, borderRadius:20,
@@ -489,7 +487,7 @@ function AuthGate({ section, onLogin, onClose }) {
           <button onClick={onLogin} style={{
             padding:"14px", borderRadius:14, border:"none", cursor:"pointer",
             background:"linear-gradient(135deg, #4d96ff, #6e56cf)",
-            color:"#fff", fontFamily:"'DM Sans',sans-serif",
+            color:"#fff", fontFamily:"'Space Grotesk',sans-serif",
             fontSize:15, fontWeight:800, boxShadow:"0 6px 24px #4d96ff44",
             transition:"transform 0.12s",
           }}
@@ -501,7 +499,7 @@ function AuthGate({ section, onLogin, onClose }) {
           <button onClick={onLogin} style={{
             padding:"13px", borderRadius:14, cursor:"pointer",
             background:"transparent", border:"1.5px solid #2a2645",
-            color:"#8884aa", fontFamily:"'DM Sans',sans-serif",
+            color:"#8884aa", fontFamily:"'Space Grotesk',sans-serif",
             fontSize:14, fontWeight:700, transition:"all 0.12s",
           }}
             onMouseEnter={e => { e.currentTarget.style.borderColor="#4d96ff66"; e.currentTarget.style.color="#f0eeff"; }}
@@ -512,7 +510,7 @@ function AuthGate({ section, onLogin, onClose }) {
           <button onClick={onClose} style={{
             background:"none", border:"none", cursor:"pointer",
             color:"#4a4870", fontSize:12, fontWeight:600,
-            fontFamily:"'DM Sans',sans-serif", padding:"4px",
+            fontFamily:"'Space Grotesk',sans-serif", padding:"4px",
           }}>
             Continue as guest →
           </button>
@@ -716,7 +714,7 @@ export default function App() {
             borderRadius:12, padding:"6px 12px",
             display:"flex", alignItems:"center", gap:6,
             color:"#f0eeff", fontSize:13, fontWeight:700,
-            cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
+            cursor:"pointer", fontFamily:"'Space Grotesk',sans-serif",
             boxShadow:"0 2px 12px #00000066",
           }}
         >
@@ -744,7 +742,7 @@ export default function App() {
             borderRadius:12, padding:"6px 12px",
             display:"flex", alignItems:"center", gap:6,
             color:"#f0eeff", fontSize:13, fontWeight:700,
-            cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
+            cursor:"pointer", fontFamily:"'Space Grotesk',sans-serif",
             boxShadow:"0 2px 12px #00000066",
           }}
         >
@@ -766,7 +764,7 @@ export default function App() {
           position:"fixed", bottom:70, left:0, right:0, zIndex:200,
           background:"#ff6b6b22", border:"1px solid #ff6b6b88",
           padding:"10px 16px", textAlign:"center",
-          fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#ff6b6b", fontWeight:600,
+          fontFamily:"'Space Grotesk',sans-serif", fontSize:13, color:"#ff6b6b", fontWeight:600,
           display:"flex", alignItems:"center", justifyContent:"center", gap:10,
         }}>
           ⚠ Login error: {oauthError}

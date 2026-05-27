@@ -105,7 +105,7 @@ const css = `
   ::-webkit-scrollbar { width:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
   ::-webkit-scrollbar-thumb { background:${C.border2}; border-radius:2px; }
-  .tab-btn { padding:8px 18px; border-radius:10px; border:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .tab-btn { padding:8px 18px; border-radius:10px; border:none; background:transparent; font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
   .tab-btn.active { background:${C.border2}; color:${C.text}; }
   .tab-btn:not(.active) { color:${C.muted}; }
   .tab-btn:not(.active):hover { color:${C.text}; }
@@ -125,7 +125,7 @@ function StatCard({ icon, label, value, color, delay="0s" }) {
     <div className="stat-card" style={{ animationDelay:delay }}>
       <div style={{ fontSize:20 }}>{icon}</div>
       <div style={{ fontFamily:"'Boogaloo',cursive", fontSize:26, color: color || C.text }}>{value}</div>
-      <div style={{ fontSize:12, color:C.muted, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>{label}</div>
+      <div style={{ fontSize:12, color:C.muted, fontWeight:600, fontFamily:"'Space Grotesk',sans-serif" }}>{label}</div>
     </div>
   );
 }
@@ -135,7 +135,7 @@ function RankBadge({ rank }) {
     <span style={{
       background: RANK_COLORS[rank-1] + "22", color: RANK_COLORS[rank-1],
       border: `1px solid ${RANK_COLORS[rank-1]}55`, borderRadius:20, padding:"2px 10px",
-      fontSize:11, fontWeight:800, fontFamily:"'DM Sans',sans-serif",
+      fontSize:11, fontWeight:800, fontFamily:"'Space Grotesk',sans-serif",
       display:"inline-flex", alignItems:"center", gap:4,
     }}>
       {RANK_ICONS[rank-1]} {RANKS[rank-1]}
@@ -147,7 +147,7 @@ function VIPBadge() {
   return (
     <span style={{
       background:"linear-gradient(135deg,#ffd93d,#ff9f43)", color:"#111", borderRadius:20, padding:"2px 10px",
-      fontSize:11, fontWeight:900, fontFamily:"'DM Sans',sans-serif", letterSpacing:0.5,
+      fontSize:11, fontWeight:900, fontFamily:"'Space Grotesk',sans-serif", letterSpacing:0.5,
     }}>⭐ VIP</span>
   );
 }
@@ -166,7 +166,7 @@ function BadgePicker({ allBadges, equipped, onEquip }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
       <div>
-        <div style={{ fontSize:12, fontWeight:700, color:C.muted, letterSpacing:1, textTransform:"uppercase", fontFamily:"'DM Sans',sans-serif", marginBottom:10 }}>
+        <div style={{ fontSize:12, fontWeight:700, color:C.muted, letterSpacing:1, textTransform:"uppercase", fontFamily:"'Space Grotesk',sans-serif", marginBottom:10 }}>
           Showcase (choose up to 3)
         </div>
         <div style={{ display:"flex", gap:12 }}>
@@ -194,7 +194,7 @@ function BadgePicker({ allBadges, equipped, onEquip }) {
 
       {picking !== null && (
         <div style={{ background:C.card2, border:`1px solid ${C.a4}55`, borderRadius:16, padding:16, animation:"popIn 0.25s ease" }}>
-          <div style={{ fontSize:12, color:C.a4, fontWeight:700, letterSpacing:1, textTransform:"uppercase", fontFamily:"'DM Sans',sans-serif", marginBottom:12 }}>
+          <div style={{ fontSize:12, color:C.a4, fontWeight:700, letterSpacing:1, textTransform:"uppercase", fontFamily:"'Space Grotesk',sans-serif", marginBottom:12 }}>
             Pick badge for slot {picking + 1}
           </div>
           <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
@@ -213,8 +213,8 @@ function BadgePicker({ allBadges, equipped, onEquip }) {
                   }}>
                   <span style={{ fontSize:18 }}>{b.icon}</span>
                   <div style={{ textAlign:"left" }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:RARITY_COLORS[b.rarity], fontFamily:"'DM Sans',sans-serif" }}>{b.name}</div>
-                    <div style={{ fontSize:10, color:C.muted, fontFamily:"'DM Sans',sans-serif" }}>{b.rarity}</div>
+                    <div style={{ fontSize:12, fontWeight:700, color:RARITY_COLORS[b.rarity], fontFamily:"'Space Grotesk',sans-serif" }}>{b.name}</div>
+                    <div style={{ fontSize:10, color:C.muted, fontFamily:"'Space Grotesk',sans-serif" }}>{b.rarity}</div>
                   </div>
                 </button>
               );
@@ -375,7 +375,7 @@ export default function ProfilePage({ onAvatarChange }) {
         <style>{css}</style>
         <div style={{ textAlign:"center" }}>
           <div style={{ fontSize:48, animation:"float 1s ease-in-out infinite" }}>🎯</div>
-          <div style={{ color:C.muted, fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:14, marginTop:14 }}>Loading profile...</div>
+          <div style={{ color:C.muted, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, marginTop:14 }}>Loading profile...</div>
         </div>
       </div>
     );
@@ -392,7 +392,7 @@ export default function ProfilePage({ onAvatarChange }) {
   ];
 
   return (
-    <div style={{ minHeight:"100vh", background:"transparent", fontFamily:"'DM Sans',sans-serif", color:C.text, padding:"0 0 60px" }}>
+    <div style={{ minHeight:"100vh", background:"transparent", fontFamily:"'Space Grotesk',sans-serif", color:C.text, padding:"0 0 60px" }}>
       <style>{css}</style>
 
       <div style={{
@@ -508,7 +508,7 @@ export default function ProfilePage({ onAvatarChange }) {
                       disabled={usernameLoading}
                       style={{
                         background:C.a4, border:"none", borderRadius:8, padding:"6px 14px",
-                        color:"#fff", fontFamily:"'DM Sans',sans-serif", fontWeight:700,
+                        color:"#fff", fontFamily:"'Space Grotesk',sans-serif", fontWeight:700,
                         fontSize:13, cursor:"pointer",
                       }}
                     >{usernameLoading ? "..." : "Save"}</button>
@@ -517,7 +517,7 @@ export default function ProfilePage({ onAvatarChange }) {
                       style={{
                         background:"transparent", border:`1px solid ${C.border2}`, borderRadius:8,
                         padding:"6px 12px", color:C.muted,
-                        fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:13, cursor:"pointer",
+                        fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor:"pointer",
                       }}
                     >Cancel</button>
                     {usernameError && <span style={{ fontSize:12, color:C.a1, fontWeight:600 }}>{usernameError}</span>}

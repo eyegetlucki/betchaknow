@@ -18,9 +18,7 @@ const C = {
 };
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: ${C.bg}; }
 
   @keyframes fadeUp    { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
@@ -35,7 +33,7 @@ const css = `
   @keyframes orb3      { 0%,100%{transform:translate(0,0) scale(1)}    50%{transform:translate(20px,25px)  scale(1.05)} }
 
   .field-group { display:flex; flex-direction:column; gap:6px; }
-  .label { font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:700;
+  .label { font-family:'Space Grotesk',sans-serif; font-size:11px; font-weight:700;
            letter-spacing:1.2px; text-transform:uppercase; color:${C.muted}; }
 
   .input-wrap { position:relative; }
@@ -43,7 +41,7 @@ const css = `
     width:100%; padding:13px 16px 13px 44px;
     background:#0d0b1a; border:1.5px solid ${C.border2};
     border-radius:12px; color:${C.text};
-    font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:500;
+    font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:500;
     outline:none; transition:border-color 0.2s, box-shadow 0.2s;
   }
   .input-wrap input::placeholder { color:${C.muted2}; }
@@ -56,50 +54,51 @@ const css = `
   .input-toggle {
     position:absolute; right:14px; top:50%; transform:translateY(-50%);
     background:none; border:none; cursor:pointer; color:${C.muted};
-    font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:600;
+    font-size:13px; font-family:'Space Grotesk',sans-serif; font-weight:600;
     padding:2px 6px; border-radius:6px; transition:color 0.15s;
   }
   .input-toggle:hover { color:${C.text}; }
 
   .err-msg { font-size:12px; color:${C.accent1}; font-weight:600;
-             font-family:'Plus Jakarta Sans',sans-serif; margin-top:2px; }
+             font-family:'Space Grotesk',sans-serif; margin-top:2px; }
 
   .divider { display:flex; align-items:center; gap:12px; }
   .divider-line { flex:1; height:1px; background:${C.border2}; }
   .divider-text { color:${C.muted2}; font-size:12px; font-weight:600;
-                  font-family:'Plus Jakarta Sans',sans-serif; white-space:nowrap; }
+                  font-family:'Space Grotesk',sans-serif; white-space:nowrap; }
 
   .oauth-btn {
     width:100%; padding:12px 20px; border-radius:12px;
-    border:1.5px solid ${C.border2}; background:#0d0b1a;
-    color:${C.text}; font-family:'Plus Jakarta Sans',sans-serif;
+    border:1.5px solid ${C.border2};
+    background:rgba(13,11,26,0.7); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    color:${C.text}; font-family:'Space Grotesk',sans-serif;
     font-size:14px; font-weight:700; cursor:pointer;
     display:flex; align-items:center; justify-content:center; gap:10px;
-    transition:border-color 0.2s, background 0.2s, transform 0.12s;
+    transition:border-color 0.2s, background 0.2s, transform 0.12s, box-shadow 0.2s;
   }
-  .oauth-btn:hover { background:#13101f; transform:translateY(-1px); }
+  .oauth-btn:hover { background:rgba(19,16,31,0.88); transform:translateY(-1px); border-color:${C.accent4}55; box-shadow:0 4px 20px rgba(77,150,255,0.18); }
   .oauth-btn:active { transform:scale(0.97); }
   .oauth-btn:disabled { opacity:0.5; cursor:not-allowed; }
 
   .primary-btn {
     width:100%; padding:14px 20px; border-radius:12px; border:none;
-    font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:800;
-    cursor:pointer; transition:transform 0.12s, box-shadow 0.2s; letter-spacing:0.3px;
+    font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:800;
+    cursor:pointer; transition:transform 0.12s, box-shadow 0.25s, filter 0.2s; letter-spacing:0.3px;
   }
-  .primary-btn:not(:disabled):hover  { transform:translateY(-2px); }
+  .primary-btn:not(:disabled):hover  { transform:translateY(-2px); filter:brightness(1.12); }
   .primary-btn:not(:disabled):active { transform:scale(0.97); }
   .primary-btn:disabled { opacity:0.5; cursor:not-allowed; }
 
   .link-btn {
     background:none; border:none; cursor:pointer; padding:0;
-    font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:13px;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px;
     transition:opacity 0.15s;
   }
   .link-btn:hover { opacity:0.75; }
 
   .strength-bar { height:4px; border-radius:2px; transition:width 0.3s, background 0.3s; }
   .check-item { display:flex; align-items:center; gap:8px;
-                font-size:12px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:500; }
+                font-size:12px; font-family:'Space Grotesk',sans-serif; font-weight:500; }
 
   .code-input {
     width:52px; height:64px; text-align:center; font-size:24px; font-weight:800;
@@ -158,7 +157,7 @@ function Logo({ size = "md" }) {
       </h1>
       {big && (
         <p style={{ color:C.muted, fontSize:13, fontWeight:600, marginTop:6,
-                    fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+                    fontFamily:"'Space Grotesk',sans-serif" }}>
           Trivia · Wagering · Bluffing · Chaos
         </p>
       )}
@@ -169,8 +168,12 @@ function Logo({ size = "md" }) {
 function AuthCard({ children, style={} }) {
   return (
     <div style={{
-      background:C.card, border:`1px solid ${C.border2}`, borderRadius:24, padding:32,
-      width:"100%", maxWidth:420, boxShadow:"0 24px 80px #00000060",
+      background:"rgba(17,15,30,0.78)",
+      backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
+      border:"1px solid rgba(255,255,255,0.08)",
+      borderRadius:24, padding:32,
+      width:"100%", maxWidth:420,
+      boxShadow:"0 24px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07)",
       position:"relative", zIndex:1,
       animation:"popIn 0.4s cubic-bezier(.17,.67,.35,1.15)",
       ...style,
@@ -276,7 +279,7 @@ function LoginScreen({ onSwitch, onSuccess }) {
             <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:26, color:C.text, marginBottom:2 }}>
               Welcome back 👋
             </h2>
-            <p style={{ color:C.muted, fontSize:13, fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:500 }}>
+            <p style={{ color:C.muted, fontSize:13, fontFamily:"'Space Grotesk',sans-serif", fontWeight:500 }}>
               Sign in to your account
             </p>
           </div>
@@ -350,7 +353,7 @@ function LoginScreen({ onSwitch, onSuccess }) {
           </button>
 
           <p style={{ textAlign:"center", color:C.muted, fontSize:13,
-                      fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:500 }}>
+                      fontFamily:"'Space Grotesk',sans-serif", fontWeight:500 }}>
             Don't have an account?{" "}
             <button className="link-btn" style={{ color:C.accent2 }}
               onClick={() => onSwitch("signup")}>Create one free</button>
@@ -425,7 +428,7 @@ function SignUpScreen({ onSwitch, onSuccess }) {
             <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:26, color:C.text, marginBottom:2 }}>
               Create your account 🎉
             </h2>
-            <p style={{ color:C.muted, fontSize:13, fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:500 }}>
+            <p style={{ color:C.muted, fontSize:13, fontFamily:"'Space Grotesk',sans-serif", fontWeight:500 }}>
               Free forever — no card required
             </p>
           </div>
@@ -465,7 +468,7 @@ function SignUpScreen({ onSwitch, onSuccess }) {
               ? <span className="err-msg">⚠ {errors.username}</span>
               : username.length > 0 && (
                 <span style={{ fontSize:12, color:C.accent3, fontWeight:600,
-                               fontFamily:"'Plus Jakarta Sans',sans-serif" }}>✓ Looks good</span>
+                               fontFamily:"'Space Grotesk',sans-serif" }}>✓ Looks good</span>
               )
             }
           </div>
@@ -502,7 +505,7 @@ function SignUpScreen({ onSwitch, onSuccess }) {
                   ))}
                 </div>
                 <div style={{ fontSize:11, color:strengthColor[strength], fontWeight:700,
-                              fontFamily:"'Plus Jakarta Sans',sans-serif", marginBottom:8 }}>
+                              fontFamily:"'Space Grotesk',sans-serif", marginBottom:8 }}>
                   {strengthLabel[strength]}
                 </div>
                 <div style={{ display:"flex", flexWrap:"wrap", gap:"4px 16px" }}>
@@ -529,7 +532,7 @@ function SignUpScreen({ onSwitch, onSuccess }) {
               ? <span className="err-msg">⚠ {errors.confirm}</span>
               : confirm.length > 0 && pw === confirm && (
                 <span style={{ fontSize:12, color:C.accent3, fontWeight:600,
-                               fontFamily:"'Plus Jakarta Sans',sans-serif" }}>✓ Passwords match</span>
+                               fontFamily:"'Space Grotesk',sans-serif" }}>✓ Passwords match</span>
               )
             }
           </div>
@@ -545,7 +548,7 @@ function SignUpScreen({ onSwitch, onSuccess }) {
               }}>
               {agreed && <span style={{ color:"#fff", fontSize:11, fontWeight:900 }}>✓</span>}
             </button>
-            <p style={{ fontSize:12, color:C.muted, fontFamily:"'Plus Jakarta Sans',sans-serif",
+            <p style={{ fontSize:12, color:C.muted, fontFamily:"'Space Grotesk',sans-serif",
                         lineHeight:1.5, fontWeight:500 }}>
               I agree to the{" "}
               <span style={{ color:C.accent4, cursor:"pointer", fontWeight:700 }}>Terms of Service</span>
@@ -568,7 +571,7 @@ function SignUpScreen({ onSwitch, onSuccess }) {
           </button>
 
           <p style={{ textAlign:"center", color:C.muted, fontSize:13,
-                      fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:500 }}>
+                      fontFamily:"'Space Grotesk',sans-serif", fontWeight:500 }}>
             Already have an account?{" "}
             <button className="link-btn" style={{ color:C.accent4 }}
               onClick={()=>onSwitch("login")}>Sign in</button>
@@ -641,7 +644,7 @@ function VerifyScreen({ userId, email, onSuccess }) {
           Email Verified!
         </h2>
         <p style={{ color:C.muted, fontSize:14, marginTop:8,
-                    fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:500 }}>
+                    fontFamily:"'Space Grotesk',sans-serif", fontWeight:500 }}>
           Welcome to Betcha Know! Loading your account...
         </p>
         <div style={{ marginTop:20, display:"flex", justifyContent:"center" }}>
@@ -663,7 +666,7 @@ function VerifyScreen({ userId, email, onSuccess }) {
             <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:26, color:C.text, marginBottom:6 }}>
               Check your inbox
             </h2>
-            <p style={{ color:C.muted, fontSize:13, fontFamily:"'Plus Jakarta Sans',sans-serif",
+            <p style={{ color:C.muted, fontSize:13, fontFamily:"'Space Grotesk',sans-serif",
                         fontWeight:500, lineHeight:1.6 }}>
               We sent a 6-digit code to{" "}
               <span style={{ color:C.text, fontWeight:700 }}>{email || "your email"}</span>.
@@ -682,7 +685,7 @@ function VerifyScreen({ userId, email, onSuccess }) {
 
           {error && (
             <p style={{ textAlign:"center", color:C.accent1, fontSize:13, fontWeight:600,
-                        fontFamily:"'Plus Jakarta Sans',sans-serif" }}>⚠ {error}</p>
+                        fontFamily:"'Space Grotesk',sans-serif" }}>⚠ {error}</p>
           )}
 
           <button className="primary-btn" disabled={loading || code.join("").length < 6}
@@ -699,11 +702,11 @@ function VerifyScreen({ userId, email, onSuccess }) {
           </button>
 
           <div style={{ textAlign:"center" }}>
-            <p style={{ color:C.muted, fontSize:13, fontFamily:"'Plus Jakarta Sans',sans-serif",
+            <p style={{ color:C.muted, fontSize:13, fontFamily:"'Space Grotesk',sans-serif",
                         fontWeight:500, marginBottom:8 }}>Didn't receive the code?</p>
             {resent ? (
               <p style={{ color:C.accent3, fontSize:13, fontWeight:700,
-                          fontFamily:"'Plus Jakarta Sans',sans-serif" }}>✓ New code sent!</p>
+                          fontFamily:"'Space Grotesk',sans-serif" }}>✓ New code sent!</p>
             ) : (
               <button className="link-btn" style={{ color:C.accent4, fontSize:13 }}
                 disabled={resending}
@@ -747,7 +750,7 @@ function ForgotScreen({ onSwitch }) {
         <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:26, color:C.text, marginBottom:8 }}>
           Reset link sent!
         </h2>
-        <p style={{ color:C.muted, fontSize:13, fontFamily:"'Plus Jakarta Sans',sans-serif",
+        <p style={{ color:C.muted, fontSize:13, fontFamily:"'Space Grotesk',sans-serif",
                     fontWeight:500, lineHeight:1.6, marginBottom:20 }}>
           Check your inbox for a password reset link. It expires in 15 minutes.
         </p>
@@ -767,7 +770,7 @@ function ForgotScreen({ onSwitch }) {
             <h2 style={{ fontFamily:"'Boogaloo',cursive", fontSize:26, color:C.text, marginBottom:4 }}>
               Reset password 🔑
             </h2>
-            <p style={{ color:C.muted, fontSize:13, fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:500 }}>
+            <p style={{ color:C.muted, fontSize:13, fontFamily:"'Space Grotesk',sans-serif", fontWeight:500 }}>
               Enter your email and we'll send a reset link
             </p>
           </div>
